@@ -225,7 +225,7 @@ def main():
     # 4. Test invalid date format
     tester.test_statistics_invalid_date()
     
-    # 4. Test chats endpoints
+    # 5. Test chats endpoints
     chats_success, chats_response, first_chat_id = tester.test_chats_list()
     
     # 5. Test search functionality
