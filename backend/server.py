@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from enum import Enum
 import random
 
@@ -30,13 +30,11 @@ api_router = APIRouter(prefix="/api")
 class ChatStatus(str, Enum):
     CONSULTATION = "consultation"
     NO_RESPONSE = "no_response"
-    BLOCKED = "blocked"
     ACTIVE = "active"
 
 class DealStatus(str, Enum):
     CONSULTATION_SCHEDULED = "consultation_scheduled"
     NO_RESPONSE = "no_response"
-    BLOCKED = "blocked"
 
 # Models
 class ChatMessage(BaseModel):
@@ -70,11 +68,11 @@ class StatisticsResponse(BaseModel):
     total_deals: int
     consultation_scheduled: int
     no_response: int
-    blocked: int
     average_interactions_per_client: float
     average_dialog_cost: float
     average_conversion_cost: float
-    period: str
+    period_start: str
+    period_end: str
 
 class ChatListResponse(BaseModel):
     chats: List[Chat]
@@ -108,20 +106,19 @@ async def generate_test_data():
         deals_data = []
         
         for client_id, client_name, client_phone in clients:
-            # Determine chat status
+            # Determine chat status (removed blocked status)
             status_weights = [
-                (ChatStatus.CONSULTATION, 0.4),
-                (ChatStatus.NO_RESPONSE, 0.3),
-                (ChatStatus.BLOCKED, 0.2),
-                (ChatStatus.ACTIVE, 0.1)
+                (ChatStatus.CONSULTATION, 0.5),
+                (ChatStatus.NO_RESPONSE, 0.35),
+                (ChatStatus.ACTIVE, 0.15)
             ]
             status = random.choices(
                 [s[0] for s in status_weights],
                 weights=[s[1] for s in status_weights]
             )[0]
             
-            # Generate chat
-            started_at = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))
+            # Generate chat with dates spread over last 60 days
+            started_at = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 60))
             last_message_at = started_at + timedelta(hours=random.randint(1, 48))
             
             messages = []
@@ -206,17 +203,20 @@ async def root():
     return {"message": "Жилищный баланс - Админ панель API"}
 
 @api_router.get("/statistics", response_model=StatisticsResponse)
-async def get_statistics(period: str = "week"):
-    """Get chatbot statistics"""
+async def get_statistics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+    """Get chatbot statistics for date range"""
     try:
-        # Calculate date range based on period
-        now = datetime.now(timezone.utc)
-        if period == "week":
-            start_date = now - timedelta(days=7)
-        elif period == "month":
-            start_date = now - timedelta(days=30)
+        # Parse dates or use defaults
+        if start_date and end_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
+                end_dt = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format.")
         else:
-            start_date = now - timedelta(days=7)  # default to week
+            # Default to last 7 days
+            end_dt = datetime.now(timezone.utc)
+            start_dt = end_dt - timedelta(days=7)
         
         # Get deals in period
         deals_pipeline = [
@@ -229,7 +229,10 @@ async def get_statistics(period: str = "week"):
             },
             {
                 "$match": {
-                    "created_at_date": {"$gte": start_date}
+                    "created_at_date": {
+                        "$gte": start_dt,
+                        "$lte": end_dt
+                    }
                 }
             }
         ]
@@ -240,7 +243,6 @@ async def get_statistics(period: str = "week"):
         total_deals = len(deals)
         consultation_scheduled = len([d for d in deals if d["status"] == "consultation_scheduled"])
         no_response = len([d for d in deals if d["status"] == "no_response"])
-        blocked = len([d for d in deals if d["status"] == "blocked"])
         
         # Get chats statistics
         chats_pipeline = [
@@ -253,7 +255,10 @@ async def get_statistics(period: str = "week"):
             },
             {
                 "$match": {
-                    "started_at_date": {"$gte": start_date}
+                    "started_at_date": {
+                        "$gte": start_dt,
+                        "$lte": end_dt
+                    }
                 }
             }
         ]
@@ -281,11 +286,11 @@ async def get_statistics(period: str = "week"):
             total_deals=total_deals,
             consultation_scheduled=consultation_scheduled,
             no_response=no_response,
-            blocked=blocked,
             average_interactions_per_client=round(average_interactions_per_client, 2),
             average_dialog_cost=round(average_dialog_cost, 2),
             average_conversion_cost=round(average_conversion_cost, 2),
-            period=period
+            period_start=start_dt.isoformat(),
+            period_end=end_dt.isoformat()
         )
         
     except Exception as e:

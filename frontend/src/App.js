@@ -9,36 +9,156 @@ import { Input } from "./components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 import { Separator } from "./components/ui/separator";
+import { Calendar } from "./components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { 
   BarChart3, 
   MessageSquare, 
   Users, 
   PhoneCall, 
-  UserX, 
   TrendingUp,
   Search,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   DollarSign
 } from "lucide-react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Date Range Picker Component
+const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
+  const [tempRange, setTempRange] = useState(dateRange);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleApply = () => {
+    if (tempRange?.from && tempRange?.to) {
+      onDateRangeChange(tempRange);
+      setIsOpen(false);
+    }
+  };
+
+  const handleQuickSelect = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    
+    const newRange = { from: start, to: end };
+    setTempRange(newRange);
+    onDateRangeChange(newRange);
+    setIsOpen(false);
+  };
+
+  const formatDateRange = () => {
+    if (!dateRange?.from || !dateRange?.to) return "Выберите период";
+    
+    const start = format(dateRange.from, "dd MMM", { locale: ru });
+    const end = format(dateRange.to, "dd MMM", { locale: ru });
+    
+    if (start === end) return start;
+    return `${start} — ${end}`;
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="justify-start text-left font-normal border-gray-200 hover:border-zhb-primary"
+        >
+          <CalendarIcon className="mr-2 h-4 w-4 text-zhb-primary" />
+          <span className="text-gray-700">{formatDateRange()}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="p-4 space-y-4">
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleQuickSelect(6)}
+              className="text-xs"
+            >
+              Неделя
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleQuickSelect(29)}
+              className="text-xs"
+            >
+              Месяц
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleQuickSelect(89)}
+              className="text-xs"
+            >
+              3 месяца
+            </Button>
+          </div>
+          
+          <Calendar
+            mode="range"
+            selected={tempRange}
+            onSelect={setTempRange}
+            numberOfMonths={2}
+            locale={ru}
+            className="rounded-md border"
+          />
+          
+          <div className="flex justify-between pt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button 
+              size="sm"
+              onClick={handleApply}
+              disabled={!tempRange?.from || !tempRange?.to}
+              className="bg-zhb-primary hover:bg-zhb-primary/90"
+            >
+              Применить
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 // Statistics Component
 const Statistics = () => {
   const [stats, setStats] = useState(null);
-  const [period, setPeriod] = useState("week");
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 6); // Last 7 days
+    return { from: start, to: end };
+  });
 
   useEffect(() => {
     fetchStatistics();
-  }, [period]);
+  }, [dateRange]);
 
   const fetchStatistics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/statistics?period=${period}`);
+      const params = new URLSearchParams();
+      
+      if (dateRange?.from && dateRange?.to) {
+        params.append('start_date', dateRange.from.toISOString());
+        params.append('end_date', dateRange.to.toISOString());
+      }
+      
+      const response = await axios.get(`${API}/statistics?${params}`);
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching statistics:", error);
@@ -69,7 +189,7 @@ const Statistics = () => {
       value: stats.total_deals,
       icon: BarChart3,
       color: "bg-zhb-primary",
-      description: `за ${period === "week" ? "неделю" : "месяц"}`
+      description: "за выбранный период"
     },
     {
       title: "Записанные на КК",
@@ -84,13 +204,6 @@ const Statistics = () => {
       icon: MessageSquare,
       color: "bg-zhb-warning",
       description: "не отвечают на диалог"
-    },
-    {
-      title: "Заблокировал",
-      value: stats.blocked,
-      icon: UserX,
-      color: "bg-zhb-danger",
-      description: "заблокировали бота"
     }
   ];
 
@@ -123,26 +236,14 @@ const Statistics = () => {
           <h1 className="text-3xl font-bold text-gray-900">Статистика</h1>
           <p className="text-gray-600 mt-2">Аналитика работы робота-продавца</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant={period === "week" ? "default" : "outline"}
-            onClick={() => setPeriod("week")}
-            className="bg-zhb-primary hover:bg-zhb-primary/90"
-          >
-            За неделю
-          </Button>
-          <Button
-            variant={period === "month" ? "default" : "outline"}
-            onClick={() => setPeriod("month")}
-            className="bg-zhb-primary hover:bg-zhb-primary/90"
-          >
-            За месяц
-          </Button>
-        </div>
+        <DateRangePicker 
+          dateRange={dateRange} 
+          onDateRangeChange={setDateRange}
+        />
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -221,7 +322,6 @@ const ChatHistory = () => {
     const statusMap = {
       consultation: { label: "Консультация", variant: "success" },
       no_response: { label: "Нет ответа", variant: "warning" },
-      blocked: { label: "Заблокирован", variant: "destructive" },
       active: { label: "Активен", variant: "default" }
     };
     
@@ -299,7 +399,7 @@ const ChatHistory = () => {
                   <p className="text-gray-600 text-sm mb-2">{chat.client_phone}</p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4" />
                       <span>Начат: {formatDate(chat.started_at)}</span>
                     </div>
                     <div className="flex items-center gap-1">
