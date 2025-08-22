@@ -228,7 +228,7 @@ def main():
     # 5. Test chats endpoints
     chats_success, chats_response, first_chat_id = tester.test_chats_list()
     
-    # 5. Test search functionality
+    # 6. Test search functionality
     tester.test_chats_search()
     
     # 6. Test chat details
