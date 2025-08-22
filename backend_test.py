@@ -218,9 +218,12 @@ def main():
     # 2. Generate test data
     tester.test_generate_test_data()
     
-    # 3. Test statistics endpoints
-    week_success, week_stats = tester.test_statistics_week()
-    month_success, month_stats = tester.test_statistics_month()
+    # 3. Test NEW statistics endpoints with date ranges
+    date_range_success, date_range_stats = tester.test_statistics_date_range()
+    default_success, default_stats = tester.test_statistics_default()
+    
+    # 4. Test invalid date format
+    tester.test_statistics_invalid_date()
     
     # 4. Test chats endpoints
     chats_success, chats_response, first_chat_id = tester.test_chats_list()
