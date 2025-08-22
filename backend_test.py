@@ -68,47 +68,75 @@ class ZhilBalanceAPITester:
         )
         return success
 
-    def test_statistics_week(self):
-        """Test statistics for week period"""
+    def test_statistics_date_range(self):
+        """Test statistics with date range (NEW FORMAT)"""
+        # Test with specific date range
+        start_date = "2025-08-16T00:00:00Z"
+        end_date = "2025-08-22T23:59:59Z"
+        
         success, response = self.run_test(
-            "Statistics - Week Period",
+            "Statistics - Date Range",
             "GET",
             "statistics",
             200,
-            params={"period": "week"}
+            params={"start_date": start_date, "end_date": end_date}
         )
         
         if success and response:
-            # Validate response structure
+            # Validate NEW response structure (without 'blocked')
             required_fields = [
-                'total_deals', 'consultation_scheduled', 'no_response', 'blocked',
+                'total_deals', 'consultation_scheduled', 'no_response',
                 'average_interactions_per_client', 'average_dialog_cost', 
-                'average_conversion_cost', 'period'
+                'average_conversion_cost', 'period_start', 'period_end'
             ]
+            
+            # Check that 'blocked' field is NOT present
+            if 'blocked' in response:
+                print(f"   ❌ ERROR: 'blocked' field should be removed but is still present!")
+                return False, response
+            else:
+                print(f"   ✅ CONFIRMED: 'blocked' field successfully removed")
             
             missing_fields = [field for field in required_fields if field not in response]
             if missing_fields:
                 print(f"   ⚠️  Missing fields: {missing_fields}")
             else:
-                print(f"   📊 Stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations")
+                print(f"   📊 Stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations, {response['no_response']} no response")
                 print(f"   💰 Avg dialog cost: {response['average_dialog_cost']} BYN")
+                print(f"   📅 Period: {response['period_start']} to {response['period_end']}")
         
         return success, response
 
-    def test_statistics_month(self):
-        """Test statistics for month period"""
+    def test_statistics_default(self):
+        """Test statistics without date parameters (should default to last 7 days)"""
         success, response = self.run_test(
-            "Statistics - Month Period",
+            "Statistics - Default Period",
             "GET",
             "statistics",
-            200,
-            params={"period": "month"}
+            200
         )
         
         if success and response:
-            print(f"   📊 Monthly stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations")
+            print(f"   📊 Default stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations")
+            # Verify no 'blocked' field
+            if 'blocked' in response:
+                print(f"   ❌ ERROR: 'blocked' field found in default response!")
+            else:
+                print(f"   ✅ CONFIRMED: No 'blocked' field in default response")
         
         return success, response
+
+    def test_statistics_invalid_date(self):
+        """Test statistics with invalid date format"""
+        success, response = self.run_test(
+            "Statistics - Invalid Date Format",
+            "GET",
+            "statistics",
+            400,  # Should return 400 for invalid date
+            params={"start_date": "invalid-date", "end_date": "2025-08-22T23:59:59Z"}
+        )
+        
+        return success
 
     def test_chats_list(self):
         """Test getting chats list"""
