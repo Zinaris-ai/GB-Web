@@ -367,6 +367,23 @@ async def generate_test_data_endpoint():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating test data: {e}")
 
+@api_router.post("/migrate-data")
+async def migrate_data_endpoint():
+    """Migrate old data to remove blocked status"""
+    try:
+        # Remove all chats with blocked status
+        result = await db.chats.delete_many({"status": "blocked"})
+        print(f"Removed {result.deleted_count} chats with blocked status")
+        
+        # Regenerate test data
+        await db.chats.delete_many({})
+        await db.deals.delete_many({})
+        await generate_test_data()
+        
+        return {"message": f"Migration completed. Removed {result.deleted_count} blocked chats and regenerated data"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error migrating data: {e}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
