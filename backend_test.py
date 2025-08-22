@@ -231,7 +231,7 @@ def main():
     # 6. Test search functionality
     tester.test_chats_search()
     
-    # 6. Test chat details
+    # 7. Test chat details
     if first_chat_id:
         tester.test_chat_details(first_chat_id)
     
