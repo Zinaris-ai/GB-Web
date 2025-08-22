@@ -20,7 +20,9 @@ import {
   Search,
   Calendar as CalendarIcon,
   Clock,
-  DollarSign
+  DollarSign,
+  Menu,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -66,20 +68,20 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          className="justify-start text-left font-normal border-gray-200 hover:border-zhb-primary"
+          className="justify-start text-left font-normal border-gray-200 hover:border-zhb-primary w-full sm:w-auto text-sm"
         >
           <CalendarIcon className="mr-2 h-4 w-4 text-zhb-primary" />
-          <span className="text-gray-700">{formatDateRange()}</span>
+          <span className="text-gray-700 truncate">{formatDateRange()}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <div className="p-4 space-y-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button 
               size="sm" 
               variant="outline" 
               onClick={() => handleQuickSelect(6)}
-              className="text-xs"
+              className="text-xs flex-1 sm:flex-none"
             >
               Неделя
             </Button>
@@ -87,7 +89,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
               size="sm" 
               variant="outline" 
               onClick={() => handleQuickSelect(29)}
-              className="text-xs"
+              className="text-xs flex-1 sm:flex-none"
             >
               Месяц
             </Button>
@@ -95,7 +97,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
               size="sm" 
               variant="outline" 
               onClick={() => handleQuickSelect(89)}
-              className="text-xs"
+              className="text-xs flex-1 sm:flex-none"
             >
               3 месяца
             </Button>
@@ -105,7 +107,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             mode="range"
             selected={tempRange}
             onSelect={setTempRange}
-            numberOfMonths={2}
+            numberOfMonths={window.innerWidth < 640 ? 1 : 2}
             locale={ru}
             className="rounded-md border"
           />
@@ -230,34 +232,36 @@ const Statistics = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Статистика</h1>
-          <p className="text-gray-600 mt-2">Аналитика работы робота-продавца</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Статистика</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Аналитика работы робота-продавца</p>
         </div>
-        <DateRangePicker 
-          dateRange={dateRange} 
-          onDateRangeChange={setDateRange}
-        />
+        <div className="w-full sm:w-auto">
+          <DateRangePicker 
+            dateRange={dateRange} 
+            onDateRangeChange={setDateRange}
+          />
+        </div>
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="hover:shadow-lg transition-shadow border-0 shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 sm:pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700 leading-tight">
                   {stat.title}
                 </CardTitle>
-                <div className={`w-10 h-10 rounded-full ${stat.color} flex items-center justify-center`}>
+                <div className={`w-10 h-10 rounded-full ${stat.color} flex items-center justify-center flex-shrink-0`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+              <CardContent className="pt-0">
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.value}</div>
                 <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
               </CardContent>
             </Card>
@@ -266,20 +270,21 @@ const Statistics = () => {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {metricCards.map((metric, index) => {
           const Icon = metric.icon;
           return (
             <Card key={index} className="hover:shadow-lg transition-shadow border-0 shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 sm:pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700 leading-tight pr-2">
                   {metric.title}
                 </CardTitle>
-                <Icon className="h-5 w-5 text-zhb-primary" />
+                <Icon className="h-5 w-5 text-zhb-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">
-                  {metric.value} {metric.suffix && <span className="text-sm text-gray-500">{metric.suffix}</span>}
+              <CardContent className="pt-0">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900 flex items-baseline flex-wrap">
+                  <span>{metric.value}</span>
+                  {metric.suffix && <span className="text-sm text-gray-500 ml-1">{metric.suffix}</span>}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">{metric.description}</p>
               </CardContent>
@@ -343,6 +348,15 @@ const ChatHistory = () => {
     });
   };
 
+  const formatDateShort = (dateString) => {
+    return new Date(dateString).toLocaleString("ru-RU", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
   const openChatDialog = async (chat) => {
     try {
       const response = await axios.get(`${API}/chats/${chat.id}`);
@@ -362,11 +376,11 @@ const ChatHistory = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">История переписок</h1>
-          <p className="text-gray-600 mt-2">Все диалоги с клиентами ({total} чатов)</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">История переписок</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Все диалоги с клиентами ({total} чатов)</p>
         </div>
       </div>
 
@@ -377,27 +391,54 @@ const ChatHistory = () => {
           placeholder="Поиск по имени или телефону..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 w-full max-w-md border-gray-200 focus:border-zhb-primary"
+          className="pl-10 w-full border-gray-200 focus:border-zhb-primary text-sm sm:text-base"
         />
       </div>
 
       {/* Chats List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {chats.map((chat) => (
           <Card 
             key={chat.id} 
             className="hover:shadow-md transition-shadow cursor-pointer border-0 shadow-sm"
             onClick={() => openChatDialog(chat)}
           >
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-gray-900">{chat.client_name}</h3>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{chat.client_name}</h3>
                     {getStatusBadge(chat.status)}
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{chat.client_phone}</p>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <p className="text-gray-600 text-sm mb-2 truncate">{chat.client_phone}</p>
+                  
+                  {/* Mobile Layout */}
+                  <div className="block sm:hidden space-y-1 text-xs text-gray-500">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3" />
+                        <span>Начат: {formatDateShort(chat.started_at)}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-gray-900">
+                          {chat.dialog_cost.toFixed(2)} BYN
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>Последнее: {formatDateShort(chat.last_message_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" />
+                        <span>{chat.total_interactions}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <CalendarIcon className="h-4 w-4" />
                       <span>Начат: {formatDate(chat.started_at)}</span>
@@ -412,7 +453,9 @@ const ChatHistory = () => {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                
+                {/* Desktop Cost Display */}
+                <div className="hidden sm:block text-right">
                   <div className="text-sm font-medium text-gray-900">
                     {chat.dialog_cost.toFixed(2)} BYN
                   </div>
@@ -426,35 +469,37 @@ const ChatHistory = () => {
 
       {/* Chat Detail Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
           {selectedChat && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                   Диалог с {selectedChat.client_name}
                 </DialogTitle>
-                <DialogDescription>
-                  {selectedChat.client_phone} • {getStatusBadge(selectedChat.status)}
+                <DialogDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                  <span>{selectedChat.client_phone}</span>
+                  <span className="hidden sm:inline">•</span>
+                  {getStatusBadge(selectedChat.status)}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg text-sm">
                   <div>
-                    <div className="text-sm text-gray-500">Начало диалога</div>
-                    <div className="font-medium">{formatDate(selectedChat.started_at)}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Начало диалога</div>
+                    <div className="font-medium text-xs sm:text-sm">{formatDate(selectedChat.started_at)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Последнее сообщение</div>
-                    <div className="font-medium">{formatDate(selectedChat.last_message_at)}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Последнее сообщение</div>
+                    <div className="font-medium text-xs sm:text-sm">{formatDate(selectedChat.last_message_at)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Взаимодействий</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Взаимодействий</div>
                     <div className="font-medium">{selectedChat.total_interactions}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Стоимость диалога</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Стоимость диалога</div>
                     <div className="font-medium">{selectedChat.dialog_cost.toFixed(2)} BYN</div>
                   </div>
                 </div>
@@ -462,28 +507,30 @@ const ChatHistory = () => {
                 <Separator />
 
                 <div className="space-y-3">
-                  <h4 className="font-semibold">Переписка</h4>
-                  {selectedChat.messages && selectedChat.messages.map((message, index) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === 'bot' ? 'justify-start' : 'justify-end'}`}
-                    >
+                  <h4 className="font-semibold text-sm sm:text-base">Переписка</h4>
+                  <div className="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
+                    {selectedChat.messages && selectedChat.messages.map((message, index) => (
                       <div
-                        className={`max-w-xs px-4 py-2 rounded-lg ${
-                          message.sender === 'bot'
-                            ? 'bg-gray-100 text-gray-900'
-                            : 'bg-zhb-primary text-white'
-                        }`}
+                        key={message.id}
+                        className={`flex ${message.sender === 'bot' ? 'justify-start' : 'justify-end'}`}
                       >
-                        <div className="text-sm">{message.message}</div>
-                        <div className={`text-xs mt-1 ${
-                          message.sender === 'bot' ? 'text-gray-500' : 'text-white/80'
-                        }`}>
-                          {formatDate(message.timestamp)}
+                        <div
+                          className={`max-w-xs sm:max-w-sm px-3 sm:px-4 py-2 rounded-lg ${
+                            message.sender === 'bot'
+                              ? 'bg-gray-100 text-gray-900'
+                              : 'bg-zhb-primary text-white'
+                          }`}
+                        >
+                          <div className="text-xs sm:text-sm">{message.message}</div>
+                          <div className={`text-xs mt-1 ${
+                            message.sender === 'bot' ? 'text-gray-500' : 'text-white/80'
+                          }`}>
+                            {formatDateShort(message.timestamp)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </>
@@ -496,23 +543,26 @@ const ChatHistory = () => {
 
 // Navigation Component
 const NavigationBar = ({ currentPath }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14 sm:h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <div className="w-10 h-10 bg-zhb-primary rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-lg">ЖБ</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-zhb-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <span className="text-white font-bold text-sm sm:text-lg">ЖБ</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Жилищный баланс</h1>
-                <p className="text-xs text-gray-500">Админ панель</p>
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900">Жилищный баланс</h1>
+                <p className="text-xs text-gray-500 hidden sm:block">Админ панель</p>
               </div>
             </div>
           </div>
           
-          <div className="flex space-x-4">
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex space-x-4">
             <Link
               to="/"
               className={`px-4 py-2 rounded-lg transition-colors ${
@@ -536,7 +586,51 @@ const NavigationBar = ({ currentPath }) => {
               История переписок
             </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="sm:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-gray-200 bg-white">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  currentPath === '/' 
+                    ? 'bg-zhb-primary text-white' 
+                    : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 inline-block mr-2" />
+                Статистика
+              </Link>
+              <Link
+                to="/chats"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  currentPath === '/chats' 
+                    ? 'bg-zhb-primary text-white' 
+                    : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4 inline-block mr-2" />
+                История переписок
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
@@ -548,7 +642,7 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavigationBar currentPath={location.pathname} />
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

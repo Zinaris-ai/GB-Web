@@ -155,19 +155,54 @@ body {
   color: white;
 }
 
-/* Улучшения для мобильных устройств */
-@media (max-width: 768px) {
-  .mobile-stack {
-    flex-direction: column;
-    gap: 1rem;
+/* Мобильные улучшения */
+@media (max-width: 640px) {
+  /* Компактная навигация */
+  .mobile-nav-compact {
+    padding: 0.5rem 0;
   }
   
-  .mobile-full {
-    width: 100%;
+  /* Компактные карточки */
+  .mobile-card-compact {
+    padding: 1rem;
   }
   
-  .mobile-text-sm {
+  /* Улучшенная читаемость на мобильных */
+  .mobile-text-adjust {
     font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  
+  /* Компактные формы */
+  .mobile-form-compact input,
+  .mobile-form-compact select,
+  .mobile-form-compact textarea {
+    padding: 0.75rem;
+    font-size: 1rem; /* Предотвращает зум на iOS */
+  }
+  
+  /* Безопасная область для iPhone с вырезом */
+  .mobile-safe-area {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Улучшения для календаря на мобильных */
+  .mobile-calendar {
+    font-size: 0.875rem;
+  }
+  
+  /* Компактные диалоги */
+  .mobile-dialog {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+/* Улучшения для планшетов */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid-adjust {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -259,5 +294,71 @@ body {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* Мобильные улучшения для касания */
+@media (hover: none) and (pointer: coarse) {
+  /* Улучшения для сенсорных устройств */
+  .touch-target {
+    min-height: 44px; /* Рекомендуемый размер для iOS */
+    min-width: 44px;
+  }
+  
+  /* Убираем hover эффекты на сенсорных устройствах */
+  .card-hover:hover {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .interactive-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Улучшения для высоких экранов */
+@media (min-height: 800px) {
+  .min-vh-100 {
+    min-height: 100vh;
+  }
+}
+
+/* Предотвращение зума на iOS при фокусе на input */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select,
+  textarea,
+  input[type="text"],
+  input[type="password"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="color"] {
+    font-size: 16px;
+  }
+}
+
+/* Лучшая поддержка темной темы (если потребуется) */
+@media (prefers-color-scheme: dark) {
+  /* Можно добавить стили для темной темы в будущем */
+}
+
+/* Улучшения для печати */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    background: white !important;
+    color: black !important;
   }
 }
