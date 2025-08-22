@@ -1,34 +1,263 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Фирменные цвета Жилищный баланс */
+  --zhb-yellow: #E2E039;
+  --zhb-green: #82B757;
+  --zhb-blue-light: #1887C9;
+  --zhb-blue-dark: #2291D0;
+  
+  /* Системные цвета */
+  --zhb-primary: #1887C9;
+  --zhb-secondary: #82B757;
+  --zhb-accent: #E2E039;
+  --zhb-success: #82B757;
+  --zhb-warning: #E2E039;
+  --zhb-danger: #dc2626;
+  
+  /* Нейтральные цвета */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+.App {
+  min-height: 100vh;
+}
+
+/* Утилити классы для фирменных цветов */
+.zhb-primary {
+  color: var(--zhb-primary);
+}
+
+.bg-zhb-primary {
+  background-color: var(--zhb-primary);
+}
+
+.bg-zhb-primary\/90 {
+  background-color: rgb(24 135 201 / 0.9);
+}
+
+.bg-zhb-secondary {
+  background-color: var(--zhb-secondary);
+}
+
+.bg-zhb-accent {
+  background-color: var(--zhb-accent);
+}
+
+.bg-zhb-success {
+  background-color: var(--zhb-success);
+}
+
+.bg-zhb-warning {
+  background-color: var(--zhb-warning);
+}
+
+.bg-zhb-danger {
+  background-color: var(--zhb-danger);
+}
+
+.border-zhb-primary {
+  border-color: var(--zhb-primary);
+}
+
+.text-zhb-primary {
+  color: var(--zhb-primary);
+}
+
+.hover\:text-zhb-primary:hover {
+  color: var(--zhb-primary);
+}
+
+.hover\:bg-zhb-primary\/90:hover {
+  background-color: rgb(24 135 201 / 0.9);
+}
+
+.focus\:border-zhb-primary:focus {
+  border-color: var(--zhb-primary);
+}
+
+/* Кастомные стили для карточек */
+.card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для бейджей с фирменными цветами */
+.badge-success {
+  background-color: var(--zhb-success);
+  color: white;
+}
+
+.badge-warning {
+  background-color: var(--zhb-warning);
+  color: var(--gray-900);
+}
+
+.badge-danger {
+  background-color: var(--zhb-danger);
+  color: white;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Стили для диалогов чата */
+.chat-message-bot {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.chat-message-client {
+  background-color: var(--zhb-primary);
+  color: white;
+}
+
+/* Улучшения для мобильных устройств */
+@media (max-width: 768px) {
+  .mobile-stack {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+    gap: 1rem;
+  }
+  
+  .mobile-full {
+    width: 100%;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
 }
 
-.App-link {
-    color: #61dafb;
+/* Стили для скроллбара */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Дополнительные утилиты для улучшения внешнего вида */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.gradient-zhb {
+  background: linear-gradient(135deg, var(--zhb-primary) 0%, var(--zhb-blue-dark) 100%);
+}
+
+.text-gradient-zhb {
+  background: linear-gradient(135deg, var(--zhb-primary) 0%, var(--zhb-blue-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Улучшения для читаемости */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Интерактивные элементы */
+.interactive-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.interactive-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Статистические карточки */
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Улучшения типографики */
+.text-display {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.text-body {
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+/* Состояния загрузки */
+.loading-skeleton {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

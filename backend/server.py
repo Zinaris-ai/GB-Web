@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +6,11 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 import uuid
-from datetime import datetime
-
+from datetime import datetime, timezone
+from enum import Enum
+import random
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -20,37 +21,346 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="Жилищный баланс - Админ панель")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Enums
+class ChatStatus(str, Enum):
+    CONSULTATION = "consultation"
+    NO_RESPONSE = "no_response"
+    BLOCKED = "blocked"
+    ACTIVE = "active"
 
-# Define Models
-class StatusCheck(BaseModel):
+class DealStatus(str, Enum):
+    CONSULTATION_SCHEDULED = "consultation_scheduled"
+    NO_RESPONSE = "no_response"
+    BLOCKED = "blocked"
+
+# Models
+class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime
+    sender: str  # 'bot' or 'client'
+    message: str
+    
+class Chat(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
     client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    client_phone: str
+    status: ChatStatus
+    started_at: datetime
+    last_message_at: datetime
+    messages: List[ChatMessage] = []
+    total_interactions: int = 0
+    dialog_cost: float = 0.0
 
-class StatusCheckCreate(BaseModel):
+class Deal(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
     client_name: str
+    status: DealStatus
+    created_at: datetime
+    updated_at: datetime
+    estimated_cost: float = 0.0
 
-# Add your routes to the router instead of directly to app
+class StatisticsResponse(BaseModel):
+    total_deals: int
+    consultation_scheduled: int
+    no_response: int
+    blocked: int
+    average_interactions_per_client: float
+    average_dialog_cost: float
+    average_conversion_cost: float
+    period: str
+
+class ChatListResponse(BaseModel):
+    chats: List[Chat]
+    total: int
+
+# Generate test data function
+async def generate_test_data():
+    """Generate test data for demonstration"""
+    try:
+        # Check if data already exists
+        existing_chats = await db.chats.count_documents({})
+        existing_deals = await db.deals.count_documents({})
+        
+        if existing_chats > 0 and existing_deals > 0:
+            return  # Data already exists
+        
+        # Clear existing data
+        await db.chats.delete_many({})
+        await db.deals.delete_many({})
+        
+        # Generate test clients and chats
+        clients = []
+        for i in range(50):
+            client_id = str(uuid.uuid4())
+            client_name = f"Клиент {i+1}"
+            client_phone = f"+375{random.randint(29, 44)}{random.randint(1000000, 9999999)}"
+            clients.append((client_id, client_name, client_phone))
+        
+        # Generate chats
+        chats_data = []
+        deals_data = []
+        
+        for client_id, client_name, client_phone in clients:
+            # Determine chat status
+            status_weights = [
+                (ChatStatus.CONSULTATION, 0.4),
+                (ChatStatus.NO_RESPONSE, 0.3),
+                (ChatStatus.BLOCKED, 0.2),
+                (ChatStatus.ACTIVE, 0.1)
+            ]
+            status = random.choices(
+                [s[0] for s in status_weights],
+                weights=[s[1] for s in status_weights]
+            )[0]
+            
+            # Generate chat
+            started_at = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))
+            last_message_at = started_at + timedelta(hours=random.randint(1, 48))
+            
+            messages = []
+            total_interactions = random.randint(3, 15)
+            
+            # Generate messages
+            for j in range(total_interactions):
+                message_time = started_at + timedelta(minutes=j * random.randint(5, 30))
+                sender = "bot" if j % 2 == 0 else "client"
+                
+                if sender == "bot":
+                    bot_messages = [
+                        "Добро пожаловать! Я помогу вам с вопросами по жилищным программам.",
+                        "Расскажите, какие у вас планы по приобретению жилья?",
+                        "Мы предлагаем рассрочку до 15 лет без первоначального взноса.",
+                        "Хотели бы записаться на бесплатную консультацию?",
+                        "Наши специалисты проконсультируют вас по всем вопросам."
+                    ]
+                    message_text = random.choice(bot_messages)
+                else:
+                    client_messages = [
+                        "Здравствуйте!",
+                        "Интересует покупка квартиры в рассрочку",
+                        "Какие условия?",
+                        "Да, хочу записаться на консультацию",
+                        "Спасибо за информацию"
+                    ]
+                    message_text = random.choice(client_messages)
+                
+                messages.append({
+                    "id": str(uuid.uuid4()),
+                    "timestamp": message_time.isoformat(),
+                    "sender": sender,
+                    "message": message_text
+                })
+            
+            dialog_cost = random.uniform(5.0, 25.0)  # Cost in BYN
+            
+            chat_data = {
+                "id": str(uuid.uuid4()),
+                "client_id": client_id,
+                "client_name": client_name,
+                "client_phone": client_phone,
+                "status": status.value,
+                "started_at": started_at.isoformat(),
+                "last_message_at": last_message_at.isoformat(),
+                "messages": messages,
+                "total_interactions": total_interactions,
+                "dialog_cost": dialog_cost
+            }
+            chats_data.append(chat_data)
+            
+            # Generate deal if appropriate status
+            if status in [ChatStatus.CONSULTATION, ChatStatus.ACTIVE]:
+                deal_status = DealStatus.CONSULTATION_SCHEDULED if status == ChatStatus.CONSULTATION else random.choice(list(DealStatus))
+                
+                deal_data = {
+                    "id": str(uuid.uuid4()),
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "status": deal_status.value,
+                    "created_at": started_at.isoformat(),
+                    "updated_at": last_message_at.isoformat(),
+                    "estimated_cost": random.uniform(80000, 300000)  # Cost in BYN
+                }
+                deals_data.append(deal_data)
+        
+        # Insert data
+        if chats_data:
+            await db.chats.insert_many(chats_data)
+        if deals_data:
+            await db.deals.insert_many(deals_data)
+            
+        print(f"Generated {len(chats_data)} chats and {len(deals_data)} deals")
+        
+    except Exception as e:
+        print(f"Error generating test data: {e}")
+
+# API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Жилищный баланс - Админ панель API"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
+@api_router.get("/statistics", response_model=StatisticsResponse)
+async def get_statistics(period: str = "week"):
+    """Get chatbot statistics"""
+    try:
+        # Calculate date range based on period
+        now = datetime.now(timezone.utc)
+        if period == "week":
+            start_date = now - timedelta(days=7)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:
+            start_date = now - timedelta(days=7)  # default to week
+        
+        # Get deals in period
+        deals_pipeline = [
+            {
+                "$addFields": {
+                    "created_at_date": {
+                        "$dateFromString": {"dateString": "$created_at"}
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "created_at_date": {"$gte": start_date}
+                }
+            }
+        ]
+        
+        deals_cursor = db.deals.aggregate(deals_pipeline)
+        deals = await deals_cursor.to_list(length=None)
+        
+        total_deals = len(deals)
+        consultation_scheduled = len([d for d in deals if d["status"] == "consultation_scheduled"])
+        no_response = len([d for d in deals if d["status"] == "no_response"])
+        blocked = len([d for d in deals if d["status"] == "blocked"])
+        
+        # Get chats statistics
+        chats_pipeline = [
+            {
+                "$addFields": {
+                    "started_at_date": {
+                        "$dateFromString": {"dateString": "$started_at"}
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "started_at_date": {"$gte": start_date}
+                }
+            }
+        ]
+        
+        chats_cursor = db.chats.aggregate(chats_pipeline)
+        chats = await chats_cursor.to_list(length=None)
+        
+        if chats:
+            total_interactions = sum(chat.get("total_interactions", 0) for chat in chats)
+            total_clients = len(chats)
+            average_interactions_per_client = total_interactions / total_clients if total_clients > 0 else 0
+            
+            total_dialog_cost = sum(chat.get("dialog_cost", 0) for chat in chats)
+            average_dialog_cost = total_dialog_cost / total_clients if total_clients > 0 else 0
+            
+            # Average conversion cost (total dialog cost / successful conversions)
+            successful_conversions = consultation_scheduled
+            average_conversion_cost = total_dialog_cost / successful_conversions if successful_conversions > 0 else 0
+        else:
+            average_interactions_per_client = 0
+            average_dialog_cost = 0
+            average_conversion_cost = 0
+        
+        return StatisticsResponse(
+            total_deals=total_deals,
+            consultation_scheduled=consultation_scheduled,
+            no_response=no_response,
+            blocked=blocked,
+            average_interactions_per_client=round(average_interactions_per_client, 2),
+            average_dialog_cost=round(average_dialog_cost, 2),
+            average_conversion_cost=round(average_conversion_cost, 2),
+            period=period
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting statistics: {e}")
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+@api_router.get("/chats", response_model=ChatListResponse)
+async def get_chats(limit: int = 20, offset: int = 0, search: Optional[str] = None):
+    """Get chat history with pagination and search"""
+    try:
+        # Build query
+        query = {}
+        if search:
+            query = {
+                "$or": [
+                    {"client_name": {"$regex": search, "$options": "i"}},
+                    {"client_phone": {"$regex": search, "$options": "i"}}
+                ]
+            }
+        
+        # Get total count
+        total = await db.chats.count_documents(query)
+        
+        # Get chats with pagination
+        chats_cursor = db.chats.find(query).sort("last_message_at", -1).skip(offset).limit(limit)
+        chats_data = await chats_cursor.to_list(length=None)
+        
+        # Convert to Chat models
+        chats = []
+        for chat_data in chats_data:
+            # Convert datetime strings back to datetime objects for response
+            chat_data["started_at"] = datetime.fromisoformat(chat_data["started_at"])
+            chat_data["last_message_at"] = datetime.fromisoformat(chat_data["last_message_at"])
+            
+            # Convert message timestamps
+            for message in chat_data.get("messages", []):
+                message["timestamp"] = datetime.fromisoformat(message["timestamp"])
+            
+            chats.append(Chat(**chat_data))
+        
+        return ChatListResponse(chats=chats, total=total)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting chats: {e}")
+
+@api_router.get("/chats/{chat_id}")
+async def get_chat_details(chat_id: str):
+    """Get detailed chat information"""
+    try:
+        chat_data = await db.chats.find_one({"id": chat_id})
+        if not chat_data:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        
+        # Convert datetime strings back to datetime objects
+        chat_data["started_at"] = datetime.fromisoformat(chat_data["started_at"])
+        chat_data["last_message_at"] = datetime.fromisoformat(chat_data["last_message_at"])
+        
+        # Convert message timestamps
+        for message in chat_data.get("messages", []):
+            message["timestamp"] = datetime.fromisoformat(message["timestamp"])
+        
+        return Chat(**chat_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting chat details: {e}")
+
+@api_router.post("/generate-test-data")
+async def generate_test_data_endpoint():
+    """Generate test data for demonstration"""
+    try:
+        await generate_test_data()
+        return {"message": "Test data generated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating test data: {e}")
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -70,6 +380,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Generate test data on startup"""
+    await generate_test_data()
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Add missing import
+from datetime import timedelta
