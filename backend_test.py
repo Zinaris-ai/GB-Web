@@ -102,7 +102,7 @@ class ZhilBalanceAPITester:
             if missing_fields:
                 print(f"   ⚠️  Missing fields: {missing_fields}")
             else:
-                print(f"   📊 Stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations, {response['no_response']} no response")
+                print(f"   📊 Stats: {response['total_deals']} deals, КК: {response['consultation_scheduled']}, ИК: {response['individual_consultation_scheduled']}, No response: {response['no_response']}")
                 print(f"   💰 Avg dialog cost: {response['average_dialog_cost']} BYN")
                 print(f"   📅 Period: {response['period_start']} to {response['period_end']}")
         
