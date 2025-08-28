@@ -29,11 +29,13 @@ api_router = APIRouter(prefix="/api")
 # Enums
 class ChatStatus(str, Enum):
     CONSULTATION = "consultation"
+    INDIVIDUAL_CONSULTATION = "individual_consultation"
     NO_RESPONSE = "no_response"
     ACTIVE = "active"
 
 class DealStatus(str, Enum):
     CONSULTATION_SCHEDULED = "consultation_scheduled"
+    INDIVIDUAL_CONSULTATION_SCHEDULED = "individual_consultation_scheduled"
     NO_RESPONSE = "no_response"
 
 # Models
@@ -67,6 +69,7 @@ class Deal(BaseModel):
 class StatisticsResponse(BaseModel):
     total_deals: int
     consultation_scheduled: int
+    individual_consultation_scheduled: int
     no_response: int
     average_interactions_per_client: float
     average_dialog_cost: float
@@ -106,10 +109,11 @@ async def generate_test_data():
         deals_data = []
         
         for client_id, client_name, client_phone in clients:
-            # Determine chat status (removed blocked status)
+            # Determine chat status (now with individual consultation)
             status_weights = [
-                (ChatStatus.CONSULTATION, 0.5),
-                (ChatStatus.NO_RESPONSE, 0.35),
+                (ChatStatus.CONSULTATION, 0.35),  # КК - групповые консультации
+                (ChatStatus.INDIVIDUAL_CONSULTATION, 0.25),  # ИК - индивидуальные консультации
+                (ChatStatus.NO_RESPONSE, 0.25),
                 (ChatStatus.ACTIVE, 0.15)
             ]
             status = random.choices(
@@ -135,6 +139,7 @@ async def generate_test_data():
                         "Расскажите, какие у вас планы по приобретению жилья?",
                         "Мы предлагаем рассрочку до 15 лет без первоначального взноса.",
                         "Хотели бы записаться на бесплатную консультацию?",
+                        "Предлагаю записаться на индивидуальную консультацию для детального разбора.",
                         "Наши специалисты проконсультируют вас по всем вопросам."
                     ]
                     message_text = random.choice(bot_messages)
@@ -144,6 +149,7 @@ async def generate_test_data():
                         "Интересует покупка квартиры в рассрочку",
                         "Какие условия?",
                         "Да, хочу записаться на консультацию",
+                        "Лучше индивидуально пообщаться",
                         "Спасибо за информацию"
                     ]
                     message_text = random.choice(client_messages)
@@ -172,8 +178,13 @@ async def generate_test_data():
             chats_data.append(chat_data)
             
             # Generate deal if appropriate status
-            if status in [ChatStatus.CONSULTATION, ChatStatus.ACTIVE]:
-                deal_status = DealStatus.CONSULTATION_SCHEDULED if status == ChatStatus.CONSULTATION else random.choice(list(DealStatus))
+            if status in [ChatStatus.CONSULTATION, ChatStatus.INDIVIDUAL_CONSULTATION, ChatStatus.ACTIVE]:
+                if status == ChatStatus.CONSULTATION:
+                    deal_status = DealStatus.CONSULTATION_SCHEDULED
+                elif status == ChatStatus.INDIVIDUAL_CONSULTATION:
+                    deal_status = DealStatus.INDIVIDUAL_CONSULTATION_SCHEDULED
+                else:
+                    deal_status = random.choice(list(DealStatus))
                 
                 deal_data = {
                     "id": str(uuid.uuid4()),
@@ -242,6 +253,7 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
         
         total_deals = len(deals)
         consultation_scheduled = len([d for d in deals if d["status"] == "consultation_scheduled"])
+        individual_consultation_scheduled = len([d for d in deals if d["status"] == "individual_consultation_scheduled"])
         no_response = len([d for d in deals if d["status"] == "no_response"])
         
         # Get chats statistics
@@ -275,7 +287,7 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             average_dialog_cost = total_dialog_cost / total_clients if total_clients > 0 else 0
             
             # Average conversion cost (total dialog cost / successful conversions)
-            successful_conversions = consultation_scheduled
+            successful_conversions = consultation_scheduled + individual_consultation_scheduled
             average_conversion_cost = total_dialog_cost / successful_conversions if successful_conversions > 0 else 0
         else:
             average_interactions_per_client = 0
@@ -285,6 +297,7 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
         return StatisticsResponse(
             total_deals=total_deals,
             consultation_scheduled=consultation_scheduled,
+            individual_consultation_scheduled=individual_consultation_scheduled,
             no_response=no_response,
             average_interactions_per_client=round(average_interactions_per_client, 2),
             average_dialog_cost=round(average_dialog_cost, 2),
@@ -366,23 +379,6 @@ async def generate_test_data_endpoint():
         return {"message": "Test data generated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating test data: {e}")
-
-@api_router.post("/migrate-data")
-async def migrate_data_endpoint():
-    """Migrate old data to remove blocked status"""
-    try:
-        # Remove all chats with blocked status
-        result = await db.chats.delete_many({"status": "blocked"})
-        print(f"Removed {result.deleted_count} chats with blocked status")
-        
-        # Regenerate test data
-        await db.chats.delete_many({})
-        await db.deals.delete_many({})
-        await generate_test_data()
-        
-        return {"message": f"Migration completed. Removed {result.deleted_count} blocked chats and regenerated data"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error migrating data: {e}")
 
 # Include the router in the main app
 app.include_router(api_router)

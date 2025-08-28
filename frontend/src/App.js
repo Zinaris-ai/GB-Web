@@ -22,7 +22,8 @@ import {
   Clock,
   DollarSign,
   Menu,
-  X
+  X,
+  UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -201,6 +202,13 @@ const Statistics = () => {
       description: "консультаций назначено"
     },
     {
+      title: "Записанные на ИК",
+      value: stats.individual_consultation_scheduled,
+      icon: UserCheck,
+      color: "bg-zhb-secondary",
+      description: "индивидуальных консультаций"
+    },
+    {
       title: "Нет ответа",
       value: stats.no_response,
       icon: MessageSquare,
@@ -246,8 +254,8 @@ const Statistics = () => {
         </div>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* Main Stats Grid - Now 4 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -326,6 +334,7 @@ const ChatHistory = () => {
   const getStatusBadge = (status) => {
     const statusMap = {
       consultation: { label: "Консультация", variant: "success" },
+      individual_consultation: { label: "Инд. консультация", variant: "secondary" },
       no_response: { label: "Нет ответа", variant: "warning" },
       active: { label: "Активен", variant: "default" }
     };
