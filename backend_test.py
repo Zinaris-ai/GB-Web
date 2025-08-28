@@ -118,12 +118,13 @@ class ZhilBalanceAPITester:
         )
         
         if success and response:
-            print(f"   📊 Default stats: {response['total_deals']} deals, {response['consultation_scheduled']} consultations")
-            # Verify no 'blocked' field
-            if 'blocked' in response:
-                print(f"   ❌ ERROR: 'blocked' field found in default response!")
+            print(f"   📊 Default stats: {response['total_deals']} deals, КК: {response['consultation_scheduled']}, ИК: {response.get('individual_consultation_scheduled', 'MISSING')}")
+            # Verify Individual Consultation field exists
+            if 'individual_consultation_scheduled' not in response:
+                print(f"   ❌ ERROR: 'individual_consultation_scheduled' field missing in default response!")
+                return False, response
             else:
-                print(f"   ✅ CONFIRMED: No 'blocked' field in default response")
+                print(f"   ✅ CONFIRMED: Individual Consultation field present in default response")
         
         return success, response
 
