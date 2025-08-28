@@ -163,6 +163,14 @@ class ZhilBalanceAPITester:
                 else:
                     print(f"   👤 First chat: {first_chat['client_name']} ({first_chat['status']})")
                 
+                # Check for Individual Consultation status in chats
+                ic_chats = [chat for chat in chats if chat.get('status') == 'individual_consultation']
+                if ic_chats:
+                    print(f"   ✅ Found {len(ic_chats)} Individual Consultation chats")
+                    print(f"   📋 ИК Example: {ic_chats[0]['client_name']} - {ic_chats[0]['status']}")
+                else:
+                    print(f"   ⚠️  No Individual Consultation chats found in current sample")
+                
                 return success, response, chats[0]['id'] if chats else None
         
         return success, response, None
