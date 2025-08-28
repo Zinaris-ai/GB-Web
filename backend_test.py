@@ -83,19 +83,20 @@ class ZhilBalanceAPITester:
         )
         
         if success and response:
-            # Validate NEW response structure (without 'blocked')
+            # Validate NEW response structure with Individual Consultation (ИК)
             required_fields = [
-                'total_deals', 'consultation_scheduled', 'no_response',
+                'total_deals', 'consultation_scheduled', 'individual_consultation_scheduled', 'no_response',
                 'average_interactions_per_client', 'average_dialog_cost', 
                 'average_conversion_cost', 'period_start', 'period_end'
             ]
             
-            # Check that 'blocked' field is NOT present
-            if 'blocked' in response:
-                print(f"   ❌ ERROR: 'blocked' field should be removed but is still present!")
-                return False, response
+            # Check for NEW Individual Consultation field
+            if 'individual_consultation_scheduled' in response:
+                ic_count = response['individual_consultation_scheduled']
+                print(f"   ✅ NEW ИК FIELD FOUND: individual_consultation_scheduled = {ic_count}")
             else:
-                print(f"   ✅ CONFIRMED: 'blocked' field successfully removed")
+                print(f"   ❌ ERROR: 'individual_consultation_scheduled' field missing!")
+                return False, response
             
             missing_fields = [field for field in required_fields if field not in response]
             if missing_fields:
