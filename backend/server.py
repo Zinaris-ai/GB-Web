@@ -401,6 +401,12 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Generate test data on startup"""
+
+    print("\n📡 Registered routes:")
+    for route in app.routes:
+        if hasattr(route, "methods"):
+            methods = ", ".join(route.methods)
+            print(f"{methods:10} {route.path}")
     await generate_test_data()
 
 @app.on_event("shutdown")
