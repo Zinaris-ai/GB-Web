@@ -268,49 +268,52 @@ class ZhilBalanceAPITester:
         except Exception as e:
             self.log_test("Chat Search Functionality", False, f"Exception: {str(e)}")
 
+    def run_all_tests(self):
+        """Run all backend tests"""
+        print("🚀 Starting Жилищный баланс Backend API Tests")
+        print("🔥 TESTING NEW TOKEN METRICS & COST TRACKING")
+        print("=" * 60)
+        
+        # Test basic connectivity
+        self.test_api_root()
+        
+        # Generate test data
+        self.test_generate_test_data()
+        
+        # Test NEW token metrics in statistics
+        self.test_statistics_api()
+        
+        # Test NEW token integration in chats
+        chat_id = self.test_chats_api()
+        
+        # Test detailed chat view with tokens
+        self.test_chat_details_api(chat_id)
+        
+        # Test search functionality
+        self.test_search_functionality()
+        
+        # Print summary
+        print("\n" + "=" * 60)
+        print(f"📊 TEST SUMMARY")
+        print(f"Total Tests: {self.tests_run}")
+        print(f"Passed: {self.tests_passed}")
+        print(f"Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.errors:
+            print(f"\n❌ FAILED TESTS:")
+            for error in self.errors:
+                print(f"  • {error}")
+        
+        return self.tests_passed == self.tests_run
+
 def main():
-    print("🏠 Жилищный баланс - API Testing")
+    print("🏠 Жилищный баланс - NEW TOKEN METRICS API Testing")
     print("=" * 50)
     
-    # Setup
     tester = ZhilBalanceAPITester()
-    
-    # Test sequence
-    print("\n📋 Running API Tests...")
-    
-    # 1. Test root endpoint
-    tester.test_root_endpoint()
-    
-    # 2. Generate test data
-    tester.test_generate_test_data()
-    
-    # 3. Test NEW statistics endpoints with date ranges
-    date_range_success, date_range_stats = tester.test_statistics_date_range()
-    default_success, default_stats = tester.test_statistics_default()
-    
-    # 4. Test invalid date format
-    tester.test_statistics_invalid_date()
-    
-    # 5. Test chats endpoints
-    chats_success, chats_response, first_chat_id = tester.test_chats_list()
-    
-    # 6. Test search functionality
-    tester.test_chats_search()
-    
-    # 7. Test chat details
-    if first_chat_id:
-        tester.test_chat_details(first_chat_id)
-    
-    # Print results
-    print(f"\n📊 Test Results:")
-    print(f"Tests passed: {tester.tests_passed}/{tester.tests_run}")
-    
-    if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed!")
-        return 0
-    else:
-        print("❌ Some tests failed!")
-        return 1
+    success = tester.run_all_tests()
+    return 0 if success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
