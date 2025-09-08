@@ -89,12 +89,13 @@ class ChatListResponse(BaseModel):
 async def generate_test_data():
     """Generate test data for demonstration"""
     try:
-        # Check if data already exists
-        existing_chats = await db.chats.count_documents({})
-        existing_deals = await db.deals.count_documents({})
+        # Always regenerate data to ensure fresh token data
+        print("Regenerating test data with tokens...")
         
-        if existing_chats > 0 and existing_deals > 0:
-            return  # Data already exists
+        # Clear existing data
+        await db.chats.delete_many({})
+        await db.deals.delete_many({})
+        print("Cleared existing data")
         
         # Clear existing data
         await db.chats.delete_many({})
