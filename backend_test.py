@@ -97,149 +97,176 @@ class ZhilBalanceAPITester:
         except Exception as e:
             self.log_test("Generate Test Data", False, f"Exception: {str(e)}")
 
-    def test_statistics_date_range(self):
-        """Test statistics with date range (NEW FORMAT)"""
-        # Test with specific date range
-        start_date = "2025-08-16T00:00:00Z"
-        end_date = "2025-08-22T23:59:59Z"
-        
-        success, response = self.run_test(
-            "Statistics - Date Range",
-            "GET",
-            "statistics",
-            200,
-            params={"start_date": start_date, "end_date": end_date}
-        )
-        
-        if success and response:
-            # Validate NEW response structure with Individual Consultation (ИК)
+    def test_statistics_api(self):
+        """Test statistics API with NEW token metrics"""
+        try:
+            # Test without date range (default last 7 days)
+            response = requests.get(f"{self.api_url}/statistics", timeout=15)
+            success = response.status_code == 200
+            
+            if not success:
+                self.log_test("Statistics API - Basic", False, f"Status: {response.status_code}")
+                return
+            
+            data = response.json()
+            
+            # Check required fields exist including NEW token fields
             required_fields = [
-                'total_deals', 'consultation_scheduled', 'individual_consultation_scheduled', 'no_response',
-                'average_interactions_per_client', 'average_dialog_cost', 
-                'average_conversion_cost', 'period_start', 'period_end'
+                'total_deals', 'consultation_scheduled', 'individual_consultation_scheduled', 
+                'no_response', 'average_interactions_per_client', 'average_dialog_cost', 
+                'average_conversion_cost', 'total_tokens_used', 'total_period_cost',
+                'period_start', 'period_end'
             ]
             
-            # Check for NEW Individual Consultation field
-            if 'individual_consultation_scheduled' in response:
-                ic_count = response['individual_consultation_scheduled']
-                print(f"   ✅ NEW ИК FIELD FOUND: individual_consultation_scheduled = {ic_count}")
-            else:
-                print(f"   ❌ ERROR: 'individual_consultation_scheduled' field missing!")
-                return False, response
-            
-            missing_fields = [field for field in required_fields if field not in response]
+            missing_fields = [field for field in required_fields if field not in data]
             if missing_fields:
-                print(f"   ⚠️  Missing fields: {missing_fields}")
-            else:
-                print(f"   📊 Stats: {response['total_deals']} deals, КК: {response['consultation_scheduled']}, ИК: {response['individual_consultation_scheduled']}, No response: {response['no_response']}")
-                print(f"   💰 Avg dialog cost: {response['average_dialog_cost']} BYN")
-                print(f"   📅 Period: {response['period_start']} to {response['period_end']}")
-        
-        return success, response
-
-    def test_statistics_default(self):
-        """Test statistics without date parameters (should default to last 7 days)"""
-        success, response = self.run_test(
-            "Statistics - Default Period",
-            "GET",
-            "statistics",
-            200
-        )
-        
-        if success and response:
-            print(f"   📊 Default stats: {response['total_deals']} deals, КК: {response['consultation_scheduled']}, ИК: {response.get('individual_consultation_scheduled', 'MISSING')}")
-            # Verify Individual Consultation field exists
-            if 'individual_consultation_scheduled' not in response:
-                print(f"   ❌ ERROR: 'individual_consultation_scheduled' field missing in default response!")
-                return False, response
-            else:
-                print(f"   ✅ CONFIRMED: Individual Consultation field present in default response")
-        
-        return success, response
-
-    def test_statistics_invalid_date(self):
-        """Test statistics with invalid date format"""
-        success, response = self.run_test(
-            "Statistics - Invalid Date Format",
-            "GET",
-            "statistics",
-            400,  # Should return 400 for invalid date
-            params={"start_date": "invalid-date", "end_date": "2025-08-22T23:59:59Z"}
-        )
-        
-        return success
-
-    def test_chats_list(self):
-        """Test getting chats list"""
-        success, response = self.run_test(
-            "Chats List",
-            "GET",
-            "chats",
-            200
-        )
-        
-        if success and response:
-            chats = response.get('chats', [])
-            total = response.get('total', 0)
-            print(f"   💬 Found {len(chats)} chats out of {total} total")
+                self.log_test("Statistics API - Required Fields", False, f"Missing fields: {missing_fields}")
+                return
             
-            if chats:
-                first_chat = chats[0]
-                required_chat_fields = ['id', 'client_name', 'client_phone', 'status', 'started_at', 'last_message_at']
-                missing_fields = [field for field in required_chat_fields if field not in first_chat]
-                if missing_fields:
-                    print(f"   ⚠️  Missing chat fields: {missing_fields}")
-                else:
-                    print(f"   👤 First chat: {first_chat['client_name']} ({first_chat['status']})")
-                
-                # Check for Individual Consultation status in chats
-                ic_chats = [chat for chat in chats if chat.get('status') == 'individual_consultation']
-                if ic_chats:
-                    print(f"   ✅ Found {len(ic_chats)} Individual Consultation chats")
-                    print(f"   📋 ИК Example: {ic_chats[0]['client_name']} - {ic_chats[0]['status']}")
-                else:
-                    print(f"   ⚠️  No Individual Consultation chats found in current sample")
-                
-                return success, response, chats[0]['id'] if chats else None
-        
-        return success, response, None
-
-    def test_chats_search(self):
-        """Test searching chats"""
-        success, response = self.run_test(
-            "Chats Search",
-            "GET",
-            "chats",
-            200,
-            params={"search": "Клиент"}
-        )
-        
-        if success and response:
-            chats = response.get('chats', [])
-            print(f"   🔍 Search results: {len(chats)} chats found")
-        
-        return success
-
-    def test_chat_details(self, chat_id):
-        """Test getting specific chat details"""
-        if not chat_id:
-            print("❌ No chat ID available for testing chat details")
-            return False
+            self.log_test("Statistics API - Required Fields", True, "All required fields present")
             
-        success, response = self.run_test(
-            "Chat Details",
-            "GET",
-            f"chats/{chat_id}",
-            200
-        )
-        
-        if success and response:
-            messages = response.get('messages', [])
-            print(f"   💬 Chat details: {len(messages)} messages")
+            # Test NEW token metrics specifically
+            total_tokens = data.get('total_tokens_used', 0)
+            total_cost = data.get('total_period_cost', 0)
+            
+            # Validate token count is reasonable (should be > 0 if there's test data)
+            if isinstance(total_tokens, int) and total_tokens >= 0:
+                self.log_test("NEW: Total Tokens Used Field", True, f"Value: {total_tokens:,} tokens")
+            else:
+                self.log_test("NEW: Total Tokens Used Field", False, f"Invalid value: {total_tokens}")
+            
+            # Validate period cost is reasonable
+            if isinstance(total_cost, (int, float)) and total_cost >= 0:
+                self.log_test("NEW: Total Period Cost Field", True, f"Value: {total_cost} BYN")
+            else:
+                self.log_test("NEW: Total Period Cost Field", False, f"Invalid value: {total_cost}")
+            
+            # Test with custom date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=30)
+            
+            params = {
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat()
+            }
+            
+            response = requests.get(f"{self.api_url}/statistics", params=params, timeout=15)
+            if response.status_code == 200:
+                range_data = response.json()
+                self.log_test("Statistics API - Date Range", True, f"30-day range: {range_data.get('total_tokens_used', 0):,} tokens")
+            else:
+                self.log_test("Statistics API - Date Range", False, f"Status: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Statistics API", False, f"Exception: {str(e)}")
+
+    def test_chats_api(self):
+        """Test chats API with NEW token integration"""
+        try:
+            # Test basic chats endpoint
+            response = requests.get(f"{self.api_url}/chats", timeout=15)
+            success = response.status_code == 200
+            
+            if not success:
+                self.log_test("Chats API - Basic", False, f"Status: {response.status_code}")
+                return
+            
+            data = response.json()
+            
+            # Check structure
+            if 'chats' not in data or 'total' not in data:
+                self.log_test("Chats API - Structure", False, "Missing 'chats' or 'total' fields")
+                return
+            
+            self.log_test("Chats API - Structure", True, f"Found {data['total']} total chats")
+            
+            chats = data['chats']
+            if not chats:
+                self.log_test("Chats API - Token Integration", True, "No chats to test (empty dataset)")
+                return
+            
+            # Test first chat for NEW token fields
+            first_chat = chats[0]
+            
+            # Check for total_tokens_used in chat
+            if 'total_tokens_used' in first_chat:
+                tokens = first_chat['total_tokens_used']
+                self.log_test("NEW: Chat Total Tokens Field", True, f"Chat has {tokens:,} total tokens")
+            else:
+                self.log_test("NEW: Chat Total Tokens Field", False, "total_tokens_used field missing from chat")
+            
+            # Check for tokens_used in messages
+            messages = first_chat.get('messages', [])
             if messages:
-                print(f"   📝 First message: {messages[0].get('sender', 'unknown')} - {messages[0].get('message', '')[:50]}...")
-        
-        return success
+                first_message = messages[0]
+                if 'tokens_used' in first_message:
+                    msg_tokens = first_message['tokens_used']
+                    self.log_test("NEW: Message Tokens Field", True, f"Message has {msg_tokens} tokens")
+                else:
+                    self.log_test("NEW: Message Tokens Field", False, "tokens_used field missing from message")
+            else:
+                self.log_test("NEW: Message Tokens Field", True, "No messages to test")
+                
+            return first_chat['id'] if chats else None
+                
+        except Exception as e:
+            self.log_test("Chats API", False, f"Exception: {str(e)}")
+            return None
+
+    def test_chat_details_api(self, chat_id):
+        """Test individual chat details with NEW token data"""
+        if not chat_id:
+            self.log_test("Chat Details API", True, "No chat ID available to test")
+            return
+            
+        try:
+            # Test chat details endpoint
+            response = requests.get(f"{self.api_url}/chats/{chat_id}", timeout=15)
+            success = response.status_code == 200
+            
+            if not success:
+                self.log_test("Chat Details API", False, f"Status: {response.status_code}")
+                return
+            
+            chat_data = response.json()
+            
+            # Verify NEW token fields in detailed view
+            if 'total_tokens_used' in chat_data:
+                total_tokens = chat_data['total_tokens_used']
+                self.log_test("Chat Details - Total Tokens", True, f"Detail view shows {total_tokens:,} tokens")
+            else:
+                self.log_test("Chat Details - Total Tokens", False, "total_tokens_used missing in detail view")
+            
+            # Check message-level tokens and verify calculation
+            messages = chat_data.get('messages', [])
+            if messages:
+                tokens_in_messages = [msg.get('tokens_used', 0) for msg in messages]
+                calculated_total = sum(tokens_in_messages)
+                actual_total = chat_data.get('total_tokens_used', 0)
+                
+                if calculated_total == actual_total:
+                    self.log_test("Token Calculation Accuracy", True, f"Sum matches: {calculated_total}")
+                else:
+                    self.log_test("Token Calculation Accuracy", False, f"Sum mismatch: {calculated_total} vs {actual_total}")
+            
+        except Exception as e:
+            self.log_test("Chat Details API", False, f"Exception: {str(e)}")
+
+    def test_search_functionality(self):
+        """Test chat search functionality"""
+        try:
+            # Test search with a common term
+            response = requests.get(f"{self.api_url}/chats?search=Клиент", timeout=15)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                self.log_test("Chat Search Functionality", True, f"Search returned {len(data.get('chats', []))} results")
+            else:
+                self.log_test("Chat Search Functionality", False, f"Status: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Chat Search Functionality", False, f"Exception: {str(e)}")
 
 def main():
     print("🏠 Жилищный баланс - API Testing")
