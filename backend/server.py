@@ -44,6 +44,7 @@ class ChatMessage(BaseModel):
     timestamp: datetime
     sender: str  # 'bot' or 'client'
     message: str
+    tokens_used: int = 0  # Количество токенов для этого сообщения
     
 class Chat(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -56,6 +57,7 @@ class Chat(BaseModel):
     messages: List[ChatMessage] = []
     total_interactions: int = 0
     dialog_cost: float = 0.0
+    total_tokens_used: int = 0  # Общее количество токенов для чата
 
 class Deal(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -74,6 +76,8 @@ class StatisticsResponse(BaseModel):
     average_interactions_per_client: float
     average_dialog_cost: float
     average_conversion_cost: float
+    total_tokens_used: int  # Общее количество токенов за период
+    total_period_cost: float  # Общая стоимость за период
     period_start: str
     period_end: str
 
@@ -127,6 +131,7 @@ async def generate_test_data():
             
             messages = []
             total_interactions = random.randint(3, 15)
+            total_tokens_used = 0
             
             # Generate messages
             for j in range(total_interactions):
@@ -143,6 +148,8 @@ async def generate_test_data():
                         "Наши специалисты проконсультируют вас по всем вопросам."
                     ]
                     message_text = random.choice(bot_messages)
+                    # Бот использует больше токенов для генерации ответов
+                    message_tokens = random.randint(50, 200)
                 else:
                     client_messages = [
                         "Здравствуйте!",
@@ -153,12 +160,17 @@ async def generate_test_data():
                         "Спасибо за информацию"
                     ]
                     message_text = random.choice(client_messages)
+                    # Клиент использует меньше токенов (обработка входящих сообщений)
+                    message_tokens = random.randint(10, 50)
+                
+                total_tokens_used += message_tokens
                 
                 messages.append({
                     "id": str(uuid.uuid4()),
                     "timestamp": message_time.isoformat(),
                     "sender": sender,
-                    "message": message_text
+                    "message": message_text,
+                    "tokens_used": message_tokens
                 })
             
             dialog_cost = random.uniform(5.0, 25.0)  # Cost in BYN
@@ -173,7 +185,8 @@ async def generate_test_data():
                 "last_message_at": last_message_at.isoformat(),
                 "messages": messages,
                 "total_interactions": total_interactions,
-                "dialog_cost": dialog_cost
+                "dialog_cost": dialog_cost,
+                "total_tokens_used": total_tokens_used
             }
             chats_data.append(chat_data)
             
@@ -283,16 +296,24 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             total_clients = len(chats)
             average_interactions_per_client = total_interactions / total_clients if total_clients > 0 else 0
             
+            # Calculate token and cost statistics
             total_dialog_cost = sum(chat.get("dialog_cost", 0) for chat in chats)
+            total_tokens_used = sum(chat.get("total_tokens_used", 0) for chat in chats)
+            
             average_dialog_cost = total_dialog_cost / total_clients if total_clients > 0 else 0
             
             # Average conversion cost (total dialog cost / successful conversions)
             successful_conversions = consultation_scheduled + individual_consultation_scheduled
             average_conversion_cost = total_dialog_cost / successful_conversions if successful_conversions > 0 else 0
+            
+            # Total period cost is sum of all dialog costs in the period
+            total_period_cost = total_dialog_cost
         else:
             average_interactions_per_client = 0
             average_dialog_cost = 0
             average_conversion_cost = 0
+            total_tokens_used = 0
+            total_period_cost = 0.0
         
         return StatisticsResponse(
             total_deals=total_deals,
@@ -302,6 +323,8 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             average_interactions_per_client=round(average_interactions_per_client, 2),
             average_dialog_cost=round(average_dialog_cost, 2),
             average_conversion_cost=round(average_conversion_cost, 2),
+            total_tokens_used=total_tokens_used,
+            total_period_cost=round(total_period_cost, 2),
             period_start=start_dt.isoformat(),
             period_end=end_dt.isoformat()
         )

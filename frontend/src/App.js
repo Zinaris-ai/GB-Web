@@ -23,7 +23,9 @@ import {
   DollarSign,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  Zap,
+  CreditCard
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -217,6 +219,11 @@ const Statistics = () => {
     }
   ];
 
+  // Format numbers with thousands separator
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('ru-RU').format(num);
+  };
+
   const metricCards = [
     {
       title: "Среднее количество касаний",
@@ -236,6 +243,19 @@ const Statistics = () => {
       value: `${stats.average_conversion_cost} BYN`,
       icon: Users,
       description: "за успешную конверсию"
+    },
+    {
+      title: "Количество токенов",
+      value: formatNumber(stats.total_tokens_used),
+      icon: Zap,
+      suffix: "токенов",
+      description: "потрачено за период"
+    },
+    {
+      title: "Стоимость за период",
+      value: `${stats.total_period_cost} BYN`,
+      icon: CreditCard,
+      description: "общие затраты на диалоги"
     }
   ];
 
@@ -254,7 +274,7 @@ const Statistics = () => {
         </div>
       </div>
 
-      {/* Main Stats Grid - Now 4 cards */}
+      {/* Main Stats Grid - 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
@@ -277,8 +297,8 @@ const Statistics = () => {
         })}
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* Metrics Grid - Now 5 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
         {metricCards.map((metric, index) => {
           const Icon = metric.icon;
           return (
@@ -290,7 +310,7 @@ const Statistics = () => {
                 <Icon className="h-5 w-5 text-zhb-primary flex-shrink-0" />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-xl sm:text-2xl font-bold text-gray-900 flex items-baseline flex-wrap">
+                <div className="text-lg sm:text-xl font-bold text-gray-900 flex items-baseline flex-wrap">
                   <span>{metric.value}</span>
                   {metric.suffix && <span className="text-sm text-gray-500 ml-1">{metric.suffix}</span>}
                 </div>
@@ -364,6 +384,10 @@ const ChatHistory = () => {
       hour: "2-digit",
       minute: "2-digit"
     });
+  };
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('ru-RU').format(num);
   };
 
   const openChatDialog = async (chat) => {
@@ -440,8 +464,8 @@ const ChatHistory = () => {
                         <span>Последнее: {formatDateShort(chat.last_message_at)}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{chat.total_interactions}</span>
+                        <Zap className="h-3 w-3" />
+                        <span>{formatNumber(chat.total_tokens_used || 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -459,6 +483,10 @@ const ChatHistory = () => {
                     <div className="flex items-center gap-1">
                       <MessageSquare className="h-4 w-4" />
                       <span>{chat.total_interactions} взаимодействий</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Zap className="h-4 w-4" />
+                      <span>{formatNumber(chat.total_tokens_used || 0)} токенов</span>
                     </div>
                   </div>
                 </div>
@@ -494,7 +522,7 @@ const ChatHistory = () => {
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg text-sm">
                   <div>
                     <div className="text-xs sm:text-sm text-gray-500">Начало диалога</div>
                     <div className="font-medium text-xs sm:text-sm">{formatDate(selectedChat.started_at)}</div>
@@ -510,6 +538,10 @@ const ChatHistory = () => {
                   <div>
                     <div className="text-xs sm:text-sm text-gray-500">Стоимость диалога</div>
                     <div className="font-medium">{selectedChat.dialog_cost.toFixed(2)} BYN</div>
+                  </div>
+                  <div>
+                    <div className="text-xs sm:text-sm text-gray-500">Токенов использовано</div>
+                    <div className="font-medium">{formatNumber(selectedChat.total_tokens_used || 0)}</div>
                   </div>
                 </div>
 
@@ -531,10 +563,16 @@ const ChatHistory = () => {
                           }`}
                         >
                           <div className="text-xs sm:text-sm">{message.message}</div>
-                          <div className={`text-xs mt-1 ${
+                          <div className={`text-xs mt-1 flex items-center justify-between ${
                             message.sender === 'bot' ? 'text-gray-500' : 'text-white/80'
                           }`}>
-                            {formatDateShort(message.timestamp)}
+                            <span>{formatDateShort(message.timestamp)}</span>
+                            {message.tokens_used && (
+                              <div className="flex items-center gap-1 ml-2">
+                                <Zap className="h-3 w-3" />
+                                <span>{message.tokens_used}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
