@@ -1,7 +1,7 @@
 import requests
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class ZhilBalanceAPITester:
     def __init__(self, base_url="https://zhil-sales-panel.preview.emergentagent.com"):
@@ -9,6 +9,20 @@ class ZhilBalanceAPITester:
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
+        self.errors = []
+
+    def log_test(self, name, success, details=""):
+        """Log test result"""
+        self.tests_run += 1
+        if success:
+            self.tests_passed += 1
+            print(f"✅ {name} - PASSED")
+        else:
+            print(f"❌ {name} - FAILED: {details}")
+            self.errors.append(f"{name}: {details}")
+        
+        if details and success:
+            print(f"   ℹ️  {details}")
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""
@@ -21,9 +35,9 @@ class ZhilBalanceAPITester:
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, params=params)
+                response = requests.get(url, headers=headers, params=params, timeout=15)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers)
+                response = requests.post(url, json=data, headers=headers, timeout=30)
 
             success = response.status_code == expected_status
             if success:
