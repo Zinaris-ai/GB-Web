@@ -696,7 +696,7 @@ const Layout = ({ children }) => {
   );
 };
 
-// Main App Component
+// Main App Component - Жилищный баланс Admin Panel
 function App() {
   useEffect(() => {
     // Generate test data on app start
