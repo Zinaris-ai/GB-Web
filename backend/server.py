@@ -418,6 +418,10 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             average_conversion_cost=round(average_conversion_cost, 2),
             total_tokens_used=total_tokens_used,
             total_period_cost=round(total_period_cost, 2),
+            deals_by_day=deals_by_day_list,
+            daily_costs=daily_costs,
+            status_distribution=status_distribution,
+            total_chats=total_chats,
             period_start=start_dt.isoformat(),
             period_end=end_dt.isoformat()
         )
