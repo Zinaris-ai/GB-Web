@@ -10,6 +10,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, date
 from enum import Enum
+from collections import defaultdict
 import random
 
 ROOT_DIR = Path(__file__).parent
