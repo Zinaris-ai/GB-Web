@@ -73,6 +73,20 @@ class Deal(BaseModel):
     updated_at: datetime
     estimated_cost: float = 0.0
 
+# New models for analytics
+class DailyDealPoint(BaseModel):
+    date: str
+    total_deals: int
+    consultation_scheduled: int
+    individual_consultation_scheduled: int
+    no_response: int
+
+class CostTrendPoint(BaseModel):
+    date: str
+    average_dialog_cost: float
+    average_conversion_cost: float
+    chat_count: int
+
 class StatisticsResponse(BaseModel):
     total_deals: int
     consultation_scheduled: int
@@ -81,8 +95,12 @@ class StatisticsResponse(BaseModel):
     average_interactions_per_client: float
     average_dialog_cost: float
     average_conversion_cost: float
-    total_tokens_used: int  # Общее количество токенов за период
-    total_period_cost: float  # Общая стоимость за период
+    total_tokens_used: int
+    total_period_cost: float
+    deals_by_day: List[DailyDealPoint]
+    daily_costs: List[CostTrendPoint]
+    status_distribution: dict
+    total_chats: int
     period_start: str
     period_end: str
 
