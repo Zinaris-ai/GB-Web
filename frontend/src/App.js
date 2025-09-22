@@ -416,7 +416,7 @@ function App() {
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Statistics />} />
+            <Route path="/" element={<AnalyticsPage />} />
             <Route path="/chats" element={<ChatHistory />} />
           </Routes>
         </Layout>
