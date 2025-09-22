@@ -407,6 +407,7 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             average_conversion_cost = 0
             total_tokens_used = 0
             total_period_cost = 0.0
+            daily_costs = []
         
         return StatisticsResponse(
             total_deals=total_deals,
