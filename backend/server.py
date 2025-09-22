@@ -315,6 +315,75 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
         chats_cursor = db.chats.aggregate(chats_pipeline)
         chats = await chats_cursor.to_list(length=None)
         
+        total_chats = len(chats)
+        
+        # Group deals by day for daily analytics
+        deals_by_day = defaultdict(lambda: {
+            'total_deals': 0,
+            'consultation_scheduled': 0,
+            'individual_consultation_scheduled': 0,
+            'no_response': 0
+        })
+        
+        # Status distribution
+        status_distribution = {
+            'consultation_scheduled': 0,
+            'individual_consultation_scheduled': 0,
+            'no_response': 0
+        }
+        
+        for deal in deals:
+            deal_date = datetime.fromisoformat(deal['created_at']).date().isoformat()
+            deals_by_day[deal_date]['total_deals'] += 1
+            
+            if deal['status'] in status_distribution:
+                deals_by_day[deal_date][deal['status']] += 1
+                status_distribution[deal['status']] += 1
+        
+        # Group chats by day for cost analytics
+        chats_by_day = defaultdict(list)
+        
+        for chat in chats:
+            chat_date = datetime.fromisoformat(chat['started_at']).date().isoformat()
+            chats_by_day[chat_date].append(chat)
+        
+        # Calculate daily costs
+        daily_costs = []
+        for date_str, day_chats in chats_by_day.items():
+            if day_chats:
+                total_dialog_cost = sum(chat.get("dialog_cost", 0) for chat in day_chats)
+                avg_dialog_cost = total_dialog_cost / len(day_chats)
+                
+                # Count successful conversions for this day
+                successful_conversions = 0
+                for chat in day_chats:
+                    if chat.get('status') in ['consultation', 'individual_consultation']:
+                        successful_conversions += 1
+                
+                avg_conversion_cost = total_dialog_cost / successful_conversions if successful_conversions > 0 else 0
+                
+                daily_costs.append(CostTrendPoint(
+                    date=date_str,
+                    average_dialog_cost=round(avg_dialog_cost, 2),
+                    average_conversion_cost=round(avg_conversion_cost, 2),
+                    chat_count=len(day_chats)
+                ))
+        
+        # Convert deals_by_day to list and sort
+        deals_by_day_list = []
+        for date_str, data in deals_by_day.items():
+            deals_by_day_list.append(DailyDealPoint(
+                date=date_str,
+                total_deals=data['total_deals'],
+                consultation_scheduled=data['consultation_scheduled'],
+                individual_consultation_scheduled=data['individual_consultation_scheduled'],
+                no_response=data['no_response']
+            ))
+        
+        # Sort by date
+        deals_by_day_list.sort(key=lambda x: x.date)
+        daily_costs.sort(key=lambda x: x.date)
+        
         if chats:
             total_interactions = sum(chat.get("total_interactions", 0) for chat in chats)
             total_clients = len(chats)
