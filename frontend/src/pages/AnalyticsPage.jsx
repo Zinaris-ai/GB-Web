@@ -20,20 +20,6 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend
 } from 'recharts';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
