@@ -251,31 +251,6 @@ const AnalyticsPage = () => {
     }
   ];
 
-  // Prepare data for pie chart
-  const pieData = Object.entries(stats.status_distribution).map(([key, value]) => {
-    const labels = {
-      consultation_scheduled: 'Записанные на КК',
-      individual_consultation_scheduled: 'Записанные на ИК',
-      no_response: 'Нет ответа'
-    };
-    const colors = {
-      consultation_scheduled: chartColors.consultation,
-      individual_consultation_scheduled: chartColors.individual,
-      no_response: chartColors.noResponse
-    };
-    
-    return {
-      name: labels[key] || key,
-      value,
-      color: colors[key] || chartColors.primary
-    };
-  });
-
-  // Check if we have data for charts
-  const hasDealsData = stats.deals_by_day && stats.deals_by_day.length > 0;
-  const hasCostsData = stats.daily_costs && stats.daily_costs.length > 0;
-  const hasStatusData = pieData.some(item => item.value > 0);
-
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
