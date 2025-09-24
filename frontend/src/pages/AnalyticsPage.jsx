@@ -169,17 +169,6 @@ const AnalyticsPage = () => {
     return new Intl.NumberFormat('ru-RU').format(num);
   };
 
-  // Chart colors
-  const chartColors = {
-    primary: '#1887C9',
-    success: '#82B757',
-    secondary: '#82B757',
-    warning: '#E2E039',
-    consultation: '#1887C9',
-    individual: '#82B757',
-    noResponse: '#E2E039'
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
