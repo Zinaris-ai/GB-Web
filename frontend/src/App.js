@@ -23,7 +23,9 @@ import {
   DollarSign,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  Zap,
+  CreditCard
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -164,6 +166,8 @@ const Statistics = () => {
         average_interactions_per_client: 8.5,
         average_dialog_cost: 12.50,
         average_conversion_cost: 25.75,
+        total_tokens_used: 125000,
+        total_period_cost: 562.50,
         period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         period_end: dateRange?.to?.toISOString() || new Date().toISOString()
       };
@@ -223,6 +227,11 @@ const Statistics = () => {
     }
   ];
 
+  // Format numbers with thousands separator
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('ru-RU').format(num);
+  };
+
   const metricCards = [
     {
       title: "Среднее количество касаний",
@@ -238,10 +247,17 @@ const Statistics = () => {
       description: "за разговор с клиентом"
     },
     {
-      title: "Средняя стоимость конверсии",
-      value: `${stats.average_conversion_cost} BYN`,
-      icon: Users,
-      description: "за успешную конверсию"
+      title: "Количество токенов",
+      value: formatNumber(stats.total_tokens_used),
+      icon: Zap,
+      suffix: "токенов",
+      description: "потрачено за период"
+    },
+    {
+      title: "Стоимость за период",
+      value: `${stats.total_period_cost} BYN`,
+      icon: CreditCard,
+      description: "общие затраты на диалоги"
     }
   ];
 
@@ -411,6 +427,10 @@ const ChatHistory = () => {
       hour: "2-digit",
       minute: "2-digit"
     });
+  };
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('ru-RU').format(num);
   };
 
   const openChatDialog = async (chat) => {
