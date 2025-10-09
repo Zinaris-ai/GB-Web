@@ -166,6 +166,8 @@ const Statistics = () => {
         average_interactions_per_client: 8.5,
         average_dialog_cost: 12.50,
         average_conversion_cost: 25.75,
+        total_tokens_used: 125000,
+        total_period_cost: 562.50,
         period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         period_end: dateRange?.to?.toISOString() || new Date().toISOString()
       };
