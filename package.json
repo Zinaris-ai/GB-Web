@@ -1,0 +1,13 @@
+{
+  "name": "gb-web",
+  "version": "1.0.0",
+  "description": "Жилищный баланс - Админ панель",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd frontend && npm start",
+    "dev": "concurrently \"cd frontend && npm start\" \"cd backend && python server.py\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
