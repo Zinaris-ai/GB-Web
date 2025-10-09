@@ -239,12 +239,6 @@ const Statistics = () => {
       description: "за разговор с клиентом"
     },
     {
-      title: "Средняя стоимость конверсии",
-      value: `${stats.average_conversion_cost} BYN`,
-      icon: Users,
-      description: "за успешную конверсию"
-    },
-    {
       title: "Количество токенов",
       value: formatNumber(stats.total_tokens_used),
       icon: Zap,
@@ -297,8 +291,8 @@ const Statistics = () => {
         })}
       </div>
 
-      {/* Metrics Grid - Now 5 cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+      {/* Metrics Grid - Now 4 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {metricCards.map((metric, index) => {
           const Icon = metric.icon;
           return (
@@ -452,20 +446,11 @@ const ChatHistory = () => {
                         <CalendarIcon className="h-3 w-3" />
                         <span>Начат: {formatDateShort(chat.started_at)}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">
-                          {chat.dialog_cost.toFixed(2)} BYN
-                        </div>
-                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>Последнее: {formatDateShort(chat.last_message_at)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Zap className="h-3 w-3" />
-                        <span>{formatNumber(chat.total_tokens_used || 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -484,20 +469,9 @@ const ChatHistory = () => {
                       <MessageSquare className="h-4 w-4" />
                       <span>{chat.total_interactions} взаимодействий</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4" />
-                      <span>{formatNumber(chat.total_tokens_used || 0)} токенов</span>
-                    </div>
                   </div>
                 </div>
                 
-                {/* Desktop Cost Display */}
-                <div className="hidden sm:block text-right">
-                  <div className="text-sm font-medium text-gray-900">
-                    {chat.dialog_cost.toFixed(2)} BYN
-                  </div>
-                  <div className="text-xs text-gray-500">стоимость диалога</div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -535,14 +509,6 @@ const ChatHistory = () => {
                     <div className="text-xs sm:text-sm text-gray-500">Взаимодействий</div>
                     <div className="font-medium">{selectedChat.total_interactions}</div>
                   </div>
-                  <div>
-                    <div className="text-xs sm:text-sm text-gray-500">Стоимость диалога</div>
-                    <div className="font-medium">{selectedChat.dialog_cost.toFixed(2)} BYN</div>
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-sm text-gray-500">Токенов использовано</div>
-                    <div className="font-medium">{formatNumber(selectedChat.total_tokens_used || 0)}</div>
-                  </div>
                 </div>
 
                 <Separator />
@@ -567,12 +533,6 @@ const ChatHistory = () => {
                             message.sender === 'bot' ? 'text-gray-500' : 'text-white/80'
                           }`}>
                             <span>{formatDateShort(message.timestamp)}</span>
-                            {message.tokens_used && (
-                              <div className="flex items-center gap-1 ml-2">
-                                <Zap className="h-3 w-3" />
-                                <span>{message.tokens_used}</span>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>
