@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Separator } from "./components/ui/separator";
 import { Calendar } from "./components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { 
   BarChart3, 
   MessageSquare, 
@@ -25,7 +26,9 @@ import {
   X,
   UserCheck,
   Zap,
-  CreditCard
+  CreditCard,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -334,16 +337,23 @@ const ChatHistory = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [allChats, setAllChats] = useState([]);
 
   useEffect(() => {
     fetchChats();
   }, [search]);
 
+  useEffect(() => {
+    applyPagination();
+  }, [allChats, currentPage, itemsPerPage]);
+
   const fetchChats = async () => {
     try {
       setLoading(true);
       
-      // Mock data for demonstration
+      // Mock data for demonstration - расширим данные для тестирования пагинации
       const mockChats = [
         {
           id: "1",
@@ -374,6 +384,96 @@ const ChatHistory = () => {
           last_message_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
           total_interactions: 5,
           dialog_cost: 8.75
+        },
+        {
+          id: "4",
+          client_name: "Алексей Волков",
+          client_phone: "+375251234567",
+          status: "active",
+          started_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          total_interactions: 15,
+          dialog_cost: 28.90
+        },
+        {
+          id: "5",
+          client_name: "Елена Смирнова",
+          client_phone: "+375291112233",
+          status: "consultation",
+          started_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          total_interactions: 6,
+          dialog_cost: 12.40
+        },
+        {
+          id: "6",
+          client_name: "Дмитрий Козлов",
+          client_phone: "+375339876543",
+          status: "individual_consultation",
+          started_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          total_interactions: 10,
+          dialog_cost: 19.80
+        },
+        {
+          id: "7",
+          client_name: "Ольга Новикова",
+          client_phone: "+375251112233",
+          status: "no_response",
+          started_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          total_interactions: 3,
+          dialog_cost: 6.20
+        },
+        {
+          id: "8",
+          client_name: "Сергей Морозов",
+          client_phone: "+375299998877",
+          status: "active",
+          started_at: new Date(Date.now() - 8 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 1 * 60 * 60 * 1000),
+          total_interactions: 20,
+          dialog_cost: 35.60
+        },
+        {
+          id: "9",
+          client_name: "Татьяна Лебедева",
+          client_phone: "+375331234567",
+          status: "consultation",
+          started_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+          total_interactions: 7,
+          dialog_cost: 14.30
+        },
+        {
+          id: "10",
+          client_name: "Андрей Соколов",
+          client_phone: "+375251234567",
+          status: "individual_consultation",
+          started_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+          total_interactions: 11,
+          dialog_cost: 21.70
+        },
+        {
+          id: "11",
+          client_name: "Наталья Федорова",
+          client_phone: "+375299876543",
+          status: "no_response",
+          started_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+          total_interactions: 4,
+          dialog_cost: 7.90
+        },
+        {
+          id: "12",
+          client_name: "Владимир Орлов",
+          client_phone: "+375331112233",
+          status: "active",
+          started_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 30 * 60 * 1000),
+          total_interactions: 18,
+          dialog_cost: 32.10
         }
       ];
       
@@ -385,13 +485,55 @@ const ChatHistory = () => {
           )
         : mockChats;
       
-      setChats(filteredChats);
+      setAllChats(filteredChats);
       setTotal(filteredChats.length);
+      setCurrentPage(1); // Reset to first page when search changes
     } catch (error) {
       console.error("Error fetching chats:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyPagination = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedChats = allChats.slice(startIndex, endIndex);
+    setChats(paginatedChats);
+  };
+
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(parseInt(value));
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(total / itemsPerPage);
+  };
+
+  const getPageNumbers = () => {
+    const totalPages = getTotalPages();
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   };
 
   const getStatusBadge = (status) => {
@@ -562,6 +704,72 @@ const ChatHistory = () => {
           </Card>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {total > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 pt-4 border-t">
+          {/* Items per page selector */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-700">Показать:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-gray-700">из {total}</span>
+          </div>
+
+          {/* Page info and navigation */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-700">
+              Страница {currentPage} из {getTotalPages()}
+            </span>
+            
+            {/* Previous button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex space-x-1">
+              {getPageNumbers().map((page) => (
+                <Button
+                  key={page}
+                  variant={page === currentPage ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="h-8 w-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+
+            {/* Next button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === getTotalPages()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Chat Detail Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
