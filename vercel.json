@@ -4,17 +4,14 @@
   "outputDirectory": "frontend/build",
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/backend/server.py"
-    },
-    {
       "src": "/(.*)",
       "dest": "/frontend/build/index.html"
     }
   ],
-  "functions": {
-    "backend/server.py": {
-      "runtime": "python3.9"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/build/index.html"
     }
-  }
+  ]
 }
