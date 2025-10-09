@@ -30,7 +30,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://your-backend-url.com';
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
@@ -156,15 +156,21 @@ const Statistics = () => {
   const fetchStatistics = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
       
-      if (dateRange?.from && dateRange?.to) {
-        params.append('start_date', dateRange.from.toISOString());
-        params.append('end_date', dateRange.to.toISOString());
-      }
+      // Mock data for demonstration
+      const mockStats = {
+        total_deals: 45,
+        consultation_scheduled: 18,
+        individual_consultation_scheduled: 12,
+        no_response: 15,
+        average_interactions_per_client: 8.5,
+        average_dialog_cost: 12.50,
+        average_conversion_cost: 25.75,
+        period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        period_end: dateRange?.to?.toISOString() || new Date().toISOString()
+      };
       
-      const response = await axios.get(`${API}/statistics?${params}`);
-      setStats(response.data);
+      setStats(mockStats);
     } catch (error) {
       console.error("Error fetching statistics:", error);
     } finally {
@@ -334,10 +340,51 @@ const ChatHistory = () => {
   const fetchChats = async () => {
     try {
       setLoading(true);
-      const params = search ? `?search=${encodeURIComponent(search)}` : "";
-      const response = await axios.get(`${API}/chats${params}`);
-      setChats(response.data.chats);
-      setTotal(response.data.total);
+      
+      // Mock data for demonstration
+      const mockChats = [
+        {
+          id: "1",
+          client_name: "Анна Петрова",
+          client_phone: "+375291234567",
+          status: "consultation",
+          started_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+          total_interactions: 8,
+          dialog_cost: 15.50
+        },
+        {
+          id: "2", 
+          client_name: "Иван Сидоров",
+          client_phone: "+375299876543",
+          status: "individual_consultation",
+          started_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          total_interactions: 12,
+          dialog_cost: 22.30
+        },
+        {
+          id: "3",
+          client_name: "Мария Козлова", 
+          client_phone: "+375331112233",
+          status: "no_response",
+          started_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          last_message_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+          total_interactions: 5,
+          dialog_cost: 8.75
+        }
+      ];
+      
+      // Filter by search if provided
+      const filteredChats = search 
+        ? mockChats.filter(chat => 
+            chat.client_name.toLowerCase().includes(search.toLowerCase()) ||
+            chat.client_phone.includes(search)
+          )
+        : mockChats;
+      
+      setChats(filteredChats);
+      setTotal(filteredChats.length);
     } catch (error) {
       console.error("Error fetching chats:", error);
     } finally {
@@ -386,8 +433,44 @@ const ChatHistory = () => {
 
   const openChatDialog = async (chat) => {
     try {
-      const response = await axios.get(`${API}/chats/${chat.id}`);
-      setSelectedChat(response.data);
+      // Mock detailed chat data
+      const mockChatDetails = {
+        ...chat,
+        messages: [
+          {
+            id: "msg1",
+            timestamp: new Date(chat.started_at.getTime() + 5 * 60 * 1000),
+            sender: "bot",
+            message: "Добро пожаловать! Я помогу вам с вопросами по жилищным программам."
+          },
+          {
+            id: "msg2", 
+            timestamp: new Date(chat.started_at.getTime() + 10 * 60 * 1000),
+            sender: "client",
+            message: "Здравствуйте! Интересует покупка квартиры в рассрочку"
+          },
+          {
+            id: "msg3",
+            timestamp: new Date(chat.started_at.getTime() + 15 * 60 * 1000),
+            sender: "bot", 
+            message: "Отлично! Мы предлагаем рассрочку до 15 лет без первоначального взноса. Хотели бы записаться на бесплатную консультацию?"
+          },
+          {
+            id: "msg4",
+            timestamp: new Date(chat.started_at.getTime() + 20 * 60 * 1000),
+            sender: "client",
+            message: "Да, хочу записаться на консультацию"
+          },
+          {
+            id: "msg5",
+            timestamp: new Date(chat.started_at.getTime() + 25 * 60 * 1000),
+            sender: "bot",
+            message: "Превосходно! Наши специалисты проконсультируют вас по всем вопросам. Консультация назначена на завтра в 14:00."
+          }
+        ]
+      };
+      
+      setSelectedChat(mockChatDetails);
       setDialogOpen(true);
     } catch (error) {
       console.error("Error fetching chat details:", error);
@@ -658,19 +741,7 @@ const Layout = ({ children }) => {
 
 // Main App Component
 function App() {
-  useEffect(() => {
-    // Generate test data on app start
-    const generateTestData = async () => {
-      try {
-        await axios.post(`${API}/generate-test-data`);
-        console.log("Test data generated");
-      } catch (error) {
-        console.log("Test data might already exist or error:", error.message);
-      }
-    };
-    
-    generateTestData();
-  }, []);
+  // App initialization - no backend calls needed with mock data
 
   return (
     <div className="App">
