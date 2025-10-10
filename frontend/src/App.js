@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://your-backend-url.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
