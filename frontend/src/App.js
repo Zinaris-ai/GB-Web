@@ -170,6 +170,8 @@ const Statistics = () => {
     try {
       setLoading(true);
       
+      console.log('Fetching statistics...', { API, BACKEND_URL });
+      
       // Prepare query parameters
       const params = new URLSearchParams();
       
@@ -178,10 +180,15 @@ const Statistics = () => {
         params.append('end_date', dateRange.to.toISOString());
       }
       
-      const response = await axios.get(`${API}/statistics?${params.toString()}`);
+      const url = `${API}/statistics?${params.toString()}`;
+      console.log('Requesting URL:', url);
+      
+      const response = await axios.get(url);
+      console.log('API Response:', response.data);
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching statistics:", error);
+      console.log('Using fallback mock data');
       // Fallback to mock data if API fails
       const mockStats = {
         total_deals: 45,
@@ -196,6 +203,7 @@ const Statistics = () => {
         period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         period_end: dateRange?.to?.toISOString() || new Date().toISOString()
       };
+      console.log('Setting mock stats:', mockStats);
       setStats(mockStats);
     } finally {
       setLoading(false);
