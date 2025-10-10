@@ -372,11 +372,11 @@ async def get_chats(limit: int = 20, offset: int = 0, search: Optional[str] = No
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting chats: {e}")
 
-@api_router.get("/chats/{chat_id}")
-async def get_chat_details(chat_id: str):
+@api_router.get("/chats/{owner_id}")
+async def get_chat_details(owner_id: str):
     """Get detailed chat information"""
     try:
-        chat_data = await db.chats.find_one({"id": chat_id})
+        chat_data = await db.chats.find_one({"client_id": owner_id})
         if not chat_data:
             raise HTTPException(status_code=404, detail="Chat not found")
         

@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://your-backend-url.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
@@ -160,7 +160,19 @@ const Statistics = () => {
     try {
       setLoading(true);
       
-      // Mock data for demonstration
+      // Prepare query parameters
+      const params = new URLSearchParams();
+      
+      if (dateRange?.from && dateRange?.to) {
+        params.append('start_date', dateRange.from.toISOString());
+        params.append('end_date', dateRange.to.toISOString());
+      }
+      
+      const response = await axios.get(`${API}/statistics?${params.toString()}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+      // Fallback to mock data if API fails
       const mockStats = {
         total_deals: 45,
         consultation_scheduled: 18,
@@ -174,10 +186,7 @@ const Statistics = () => {
         period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         period_end: dateRange?.to?.toISOString() || new Date().toISOString()
       };
-      
       setStats(mockStats);
-    } catch (error) {
-      console.error("Error fetching statistics:", error);
     } finally {
       setLoading(false);
     }
@@ -353,127 +362,81 @@ const ChatHistory = () => {
     try {
       setLoading(true);
       
-      // Mock data for demonstration - расширим данные для тестирования пагинации
+      // Prepare query parameters
+      const params = new URLSearchParams();
+      params.append('limit', '1000'); // Get all chats for client-side pagination
+      params.append('offset', '0');
+      
+      if (search) {
+        params.append('search', search);
+      }
+      
+      const response = await axios.get(`${API}/chats?${params.toString()}`);
+      const { chats, total: totalCount } = response.data;
+      
+      // Convert date strings to Date objects
+      const processedChats = chats.map(chat => ({
+        ...chat,
+        started_at: new Date(chat.started_at),
+        last_message_at: new Date(chat.last_message_at)
+      }));
+      
+      setAllChats(processedChats);
+      setTotal(totalCount);
+      setCurrentPage(1); // Reset to first page when search changes
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+      // Fallback to mock data if API fails
       const mockChats = [
         {
           id: "1",
+          client_id: "client_1",
           client_name: "Анна Петрова",
           client_phone: "+375291234567",
           status: "consultation",
           started_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
           last_message_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-          total_interactions: 8,
-          dialog_cost: 15.50
+          total_interactions: 8
         },
         {
           id: "2", 
+          client_id: "client_2",
           client_name: "Иван Сидоров",
           client_phone: "+375299876543",
           status: "individual_consultation",
           started_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
           last_message_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          total_interactions: 12,
-          dialog_cost: 22.30
+          total_interactions: 12
         },
         {
           id: "3",
+          client_id: "client_3",
           client_name: "Мария Козлова", 
           client_phone: "+375331112233",
           status: "no_response",
           started_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           last_message_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-          total_interactions: 5,
-          dialog_cost: 8.75
+          total_interactions: 5
         },
         {
           id: "4",
+          client_id: "client_4",
           client_name: "Алексей Волков",
           client_phone: "+375251234567",
           status: "active",
           started_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
           last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          total_interactions: 15,
-          dialog_cost: 28.90
+          total_interactions: 15
         },
         {
           id: "5",
+          client_id: "client_5",
           client_name: "Елена Смирнова",
           client_phone: "+375291112233",
           status: "consultation",
           started_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
           last_message_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          total_interactions: 6,
-          dialog_cost: 12.40
-        },
-        {
-          id: "6",
-          client_name: "Дмитрий Козлов",
-          client_phone: "+375339876543",
-          status: "individual_consultation",
-          started_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          total_interactions: 10,
-          dialog_cost: 19.80
-        },
-        {
-          id: "7",
-          client_name: "Ольга Новикова",
-          client_phone: "+375251112233",
-          status: "no_response",
-          started_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          total_interactions: 3,
-          dialog_cost: 6.20
-        },
-        {
-          id: "8",
-          client_name: "Сергей Морозов",
-          client_phone: "+375299998877",
-          status: "active",
-          started_at: new Date(Date.now() - 8 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 1 * 60 * 60 * 1000),
-          total_interactions: 20,
-          dialog_cost: 35.60
-        },
-        {
-          id: "9",
-          client_name: "Татьяна Лебедева",
-          client_phone: "+375331234567",
-          status: "consultation",
-          started_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-          total_interactions: 7,
-          dialog_cost: 14.30
-        },
-        {
-          id: "10",
-          client_name: "Андрей Соколов",
-          client_phone: "+375251234567",
-          status: "individual_consultation",
-          started_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-          total_interactions: 11,
-          dialog_cost: 21.70
-        },
-        {
-          id: "11",
-          client_name: "Наталья Федорова",
-          client_phone: "+375299876543",
-          status: "no_response",
-          started_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-          total_interactions: 4,
-          dialog_cost: 7.90
-        },
-        {
-          id: "12",
-          client_name: "Владимир Орлов",
-          client_phone: "+375331112233",
-          status: "active",
-          started_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          last_message_at: new Date(Date.now() - 30 * 60 * 1000),
-          total_interactions: 18,
-          dialog_cost: 32.10
+          total_interactions: 6
         }
       ];
       
@@ -488,8 +451,6 @@ const ChatHistory = () => {
       setAllChats(filteredChats);
       setTotal(filteredChats.length);
       setCurrentPage(1); // Reset to first page when search changes
-    } catch (error) {
-      console.error("Error fetching chats:", error);
     } finally {
       setLoading(false);
     }
@@ -577,7 +538,26 @@ const ChatHistory = () => {
 
   const openChatDialog = async (chat) => {
     try {
-      // Mock detailed chat data
+      // Fetch detailed chat data from API
+      const response = await axios.get(`${API}/chats/${chat.client_id}`);
+      const chatDetails = response.data;
+      
+      // Convert date strings to Date objects
+      const processedChatDetails = {
+        ...chatDetails,
+        started_at: new Date(chatDetails.started_at),
+        last_message_at: new Date(chatDetails.last_message_at),
+        messages: chatDetails.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }))
+      };
+      
+      setSelectedChat(processedChatDetails);
+      setDialogOpen(true);
+    } catch (error) {
+      console.error("Error fetching chat details:", error);
+      // Fallback to mock data if API fails
       const mockChatDetails = {
         ...chat,
         messages: [
@@ -616,8 +596,6 @@ const ChatHistory = () => {
       
       setSelectedChat(mockChatDetails);
       setDialogOpen(true);
-    } catch (error) {
-      console.error("Error fetching chat details:", error);
     }
   };
 
