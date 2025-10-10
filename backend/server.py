@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone, date, timedelta
 from enum import Enum
 import random
+import httpx
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -243,95 +244,76 @@ async def get_statistics(start_date: Optional[str] = None, end_date: Optional[st
             end_dt = datetime.now(timezone.utc)
             start_dt = end_dt - timedelta(days=7)
         
-        # Get deals in period
-        deals_pipeline = [
-            {
-                "$addFields": {
-                    "created_at_date": {
-                        "$dateFromString": {"dateString": "$created_at"}
-                    }
-                }
-            },
-            {
-                "$match": {
-                    "created_at_date": {
-                        "$gte": start_dt,
-                        "$lte": end_dt
-                    }
-                }
-            }
-        ]
+        # Make POST request to n8n webhook
+        webhook_url = "https://n8n210980.hostkey.in/webhook/gb/statistics/getstatistics"
         
-        deals_cursor = db.deals.aggregate(deals_pipeline)
-        deals = await deals_cursor.to_list(length=None)
+        # Prepare request body
+        payload = {
+            "start_date": start_dt.isoformat(),
+            "end_date": end_dt.isoformat()
+        }
         
-        total_deals = len(deals)
-        consultation_scheduled = len([d for d in deals if d["status"] == "consultation_scheduled"])
-        individual_consultation_scheduled = len([d for d in deals if d["status"] == "individual_consultation_scheduled"])
-        no_response = len([d for d in deals if d["status"] == "no_response"])
-        
-        # Get chats statistics
-        chats_pipeline = [
-            {
-                "$addFields": {
-                    "started_at_date": {
-                        "$dateFromString": {"dateString": "$started_at"}
-                    }
-                }
-            },
-            {
-                "$match": {
-                    "started_at_date": {
-                        "$gte": start_dt,
-                        "$lte": end_dt
-                    }
-                }
-            }
-        ]
-        
-        chats_cursor = db.chats.aggregate(chats_pipeline)
-        chats = await chats_cursor.to_list(length=None)
-        
-        if chats:
-            total_interactions = sum(chat.get("total_interactions", 0) for chat in chats)
-            total_clients = len(chats)
-            average_interactions_per_client = total_interactions / total_clients if total_clients > 0 else 0
+        try:
+            # Make async HTTP POST request
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(webhook_url, json=payload)
+                response.raise_for_status()  # Raise exception for 4xx/5xx status codes
+                
+                # Parse response data
+                data = response.json()
             
-            # Calculate token and cost statistics
-            total_dialog_cost = sum(chat.get("dialog_cost", 0) for chat in chats)
-            total_tokens_used = sum(chat.get("total_tokens_used", 0) for chat in chats)
+            # Map response fields to StatisticsResponse model
+            return StatisticsResponse(
+                total_deals=data.get("totalDeals", 0),
+                consultation_scheduled=data.get("consultationScheduled", 0),
+                individual_consultation_scheduled=data.get("individualConsultationScheduled", 0),
+                no_response=data.get("noResponse", 0),
+                average_interactions_per_client=round(data.get("averageInteractionsPerClient", 0.0), 2),
+                average_dialog_cost=round(data.get("averageDialogCost", 0.0), 2),
+                average_conversion_cost=round(data.get("averageConversionCost", 0.0), 2),
+                total_tokens_used=data.get("totalTokensUsed", 0),
+                total_period_cost=round(data.get("totalPeriodCost", 0.0), 2),
+                period_start=data.get("periodStart", start_dt.isoformat()),
+                period_end=data.get("periodEnd", end_dt.isoformat())
+            )
             
-            average_dialog_cost = total_dialog_cost / total_clients if total_clients > 0 else 0
+        except httpx.HTTPStatusError as e:
+            # Webhook returned 4xx or 5xx error - return static data
+            logger.warning(f"HTTP error from webhook ({e.response.status_code}), returning static data: {e.response.text}")
+            return StatisticsResponse(
+                total_deals=101,
+                consultation_scheduled=11,
+                individual_consultation_scheduled=10,
+                no_response=11,
+                average_interactions_per_client=11.0,
+                average_dialog_cost=10.01,
+                average_conversion_cost=10.11,
+                total_tokens_used=101011,
+                total_period_cost=111.01,
+                period_start=start_dt.isoformat(),
+                period_end=end_dt.isoformat()
+            )
             
-            # Average conversion cost (total dialog cost / successful conversions)
-            successful_conversions = consultation_scheduled + individual_consultation_scheduled
-            average_conversion_cost = total_dialog_cost / successful_conversions if successful_conversions > 0 else 0
-            
-            # Total period cost is sum of all dialog costs in the period
-            total_period_cost = total_dialog_cost
-        else:
-            average_interactions_per_client = 0
-            average_dialog_cost = 0
-            average_conversion_cost = 0
-            total_tokens_used = 0
-            total_period_cost = 0.0
-        
-        return StatisticsResponse(
-            total_deals=total_deals,
-            consultation_scheduled=consultation_scheduled,
-            individual_consultation_scheduled=individual_consultation_scheduled,
-            no_response=no_response,
-            average_interactions_per_client=round(average_interactions_per_client, 2),
-            average_dialog_cost=round(average_dialog_cost, 2),
-            average_conversion_cost=round(average_conversion_cost, 2),
-            total_tokens_used=total_tokens_used,
-            total_period_cost=round(total_period_cost, 2),
-            period_start=start_dt.isoformat(),
-            period_end=end_dt.isoformat()
-        )
+        except httpx.RequestError as e:
+            # Network error or timeout - return static data
+            logger.warning(f"Request error to webhook, returning static data: {str(e)}")
+            return StatisticsResponse(
+                total_deals=101,
+                consultation_scheduled=11,
+                individual_consultation_scheduled=10,
+                no_response=11,
+                average_interactions_per_client=11.0,
+                average_dialog_cost=10.01,
+                average_conversion_cost=10.11,
+                total_tokens_used=101011,
+                total_period_cost=111.01,
+                period_start=start_dt.isoformat(),
+                period_end=end_dt.isoformat()
+            )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting statistics: {e}")
+        logger.error(f"Unexpected error getting statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
 
 @api_router.get("/chats", response_model=ChatListResponse)
 async def get_chats(limit: int = 20, offset: int = 0, search: Optional[str] = None):
