@@ -160,22 +160,19 @@ const Statistics = () => {
     try {
       setLoading(true);
       
-      // Mock data for demonstration
-      const mockStats = {
-        total_deals: 45,
-        consultation_scheduled: 18,
-        individual_consultation_scheduled: 12,
-        no_response: 15,
-        average_interactions_per_client: 8.5,
-        average_dialog_cost: 12.50,
-        average_conversion_cost: 25.75,
-        total_tokens_used: 125000,
-        total_period_cost: 562.50,
-        period_start: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        period_end: dateRange?.to?.toISOString() || new Date().toISOString()
-      };
+      // Формируем параметры запроса с датами
+      const params = new URLSearchParams();
+      if (dateRange?.from) {
+        params.append('start_date', dateRange.from.toISOString());
+      }
+      if (dateRange?.to) {
+        params.append('end_date', dateRange.to.toISOString());
+      }
       
-      setStats(mockStats);
+      // Реальный вызов API /api/statistics
+      const response = await axios.get(`${API}/statistics?${params.toString()}`);
+      setStats(response.data);
+      
     } catch (error) {
       console.error("Error fetching statistics:", error);
     } finally {
