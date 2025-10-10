@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
+const BACKEND_URL = process.env.NODE_ENV === 'production' ? '' : (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000');
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
@@ -185,6 +185,12 @@ const Statistics = () => {
       
       const response = await axios.get(url);
       console.log('API Response:', response.data);
+      
+      // Проверяем что ответ - это JSON, а не HTML
+      if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+        throw new Error('API returned HTML instead of JSON');
+      }
+      
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching statistics:", error);
@@ -390,7 +396,18 @@ const ChatHistory = () => {
       }
       
       const response = await axios.get(`${API}/chats?${params.toString()}`);
+      
+      // Проверяем что ответ - это JSON, а не HTML
+      if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+        throw new Error('API returned HTML instead of JSON');
+      }
+      
       const { chats, total: totalCount } = response.data;
+      
+      // Проверяем что chats существует и это массив
+      if (!chats || !Array.isArray(chats)) {
+        throw new Error('Invalid response format: chats is not an array');
+      }
       
       // Convert date strings to Date objects
       const processedChats = chats.map(chat => ({
@@ -559,6 +576,16 @@ const ChatHistory = () => {
       // Fetch detailed chat data from API
       const response = await axios.get(`${API}/chats/${chat.client_id}`);
       const chatDetails = response.data;
+      
+      // Проверяем что ответ - это JSON, а не HTML
+      if (typeof chatDetails === 'string' && chatDetails.includes('<!doctype html>')) {
+        throw new Error('API returned HTML instead of JSON');
+      }
+      
+      // Проверяем что messages существует и это массив
+      if (!chatDetails.messages || !Array.isArray(chatDetails.messages)) {
+        throw new Error('Invalid response format: messages is not an array');
+      }
       
       // Convert date strings to Date objects
       const processedChatDetails = {
