@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://gb-web.vercel.app';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://your-backend-url.com';
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
