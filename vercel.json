@@ -2,11 +2,6 @@
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/build",
-  "functions": {
-    "api/server.py": {
-      "runtime": "python@3.9"
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",
