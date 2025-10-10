@@ -41,6 +41,11 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
   const [tempRange, setTempRange] = useState(dateRange);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Обновляем tempRange когда dateRange изменяется
+  useEffect(() => {
+    setTempRange(dateRange);
+  }, [dateRange]);
+
   const handleApply = () => {
     if (tempRange?.from && tempRange?.to) {
       onDateRangeChange(tempRange);
@@ -51,7 +56,9 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
   const handleQuickSelect = (days) => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - days);
+    
+    // Используем более надежный способ расчета даты
+    start.setTime(end.getTime() - (days * 24 * 60 * 60 * 1000));
     
     const newRange = { from: start, to: end };
     setTempRange(newRange);
@@ -148,7 +155,10 @@ const Statistics = () => {
   const [dateRange, setDateRange] = useState(() => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 6); // Last 7 days
+    
+    // Используем более надежный способ расчета даты (последние 7 дней)
+    start.setTime(end.getTime() - (6 * 24 * 60 * 60 * 1000));
+    
     return { from: start, to: end };
   });
 
