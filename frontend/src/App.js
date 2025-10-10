@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://n8n210980.hostkey.in';
 const API = `${BACKEND_URL}/api`;
 
 // Date Range Picker Component
@@ -170,28 +170,41 @@ const Statistics = () => {
     try {
       setLoading(true);
       
-      console.log('Fetching statistics...', { API, BACKEND_URL });
+      console.log('Fetching statistics from n8n webhook...');
       
-      // Prepare query parameters
-      const params = new URLSearchParams();
+      // Prepare request body for n8n webhook
+      const payload = {
+        start_date: dateRange?.from?.toISOString() || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        end_date: dateRange?.to?.toISOString() || new Date().toISOString()
+      };
       
-      if (dateRange?.from && dateRange?.to) {
-        params.append('start_date', dateRange.from.toISOString());
-        params.append('end_date', dateRange.to.toISOString());
-      }
+      const webhookUrl = `${BACKEND_URL}/webhook/gb/statistics/getstatistics`;
+      console.log('Requesting webhook URL:', webhookUrl);
       
-      const url = `${API}/statistics?${params.toString()}`;
-      console.log('Requesting URL:', url);
-      
-      const response = await axios.get(url);
-      console.log('API Response:', response.data);
+      const response = await axios.post(webhookUrl, payload);
+      console.log('n8n Response:', response.data);
       
       // Проверяем что ответ - это JSON, а не HTML
       if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
         throw new Error('API returned HTML instead of JSON');
       }
       
-      setStats(response.data);
+      // Map n8n response to our format
+      const stats = {
+        total_deals: response.data.totalDeals || 0,
+        consultation_scheduled: response.data.consultationScheduled || 0,
+        individual_consultation_scheduled: response.data.individualConsultationScheduled || 0,
+        no_response: response.data.noResponse || 0,
+        average_interactions_per_client: response.data.averageInteractionsPerClient || 0,
+        average_dialog_cost: response.data.averageDialogCost || 0,
+        average_conversion_cost: response.data.averageConversionCost || 0,
+        total_tokens_used: response.data.totalTokensUsed || 0,
+        total_period_cost: response.data.totalPeriodCost || 0,
+        period_start: response.data.periodStart || payload.start_date,
+        period_end: response.data.periodEnd || payload.end_date
+      };
+      
+      setStats(stats);
     } catch (error) {
       console.error("Error fetching statistics:", error);
       console.log('Using fallback mock data');
