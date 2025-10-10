@@ -211,28 +211,28 @@ const Statistics = () => {
   const statCards = [
     {
       title: "Общее количество сделок",
-      value: stats.total_deals,
+      value: stats.total_deals || 0,
       icon: BarChart3,
       color: "bg-zhb-primary",
       description: "за выбранный период"
     },
     {
       title: "Записанные на КК",
-      value: stats.consultation_scheduled,
+      value: stats.consultation_scheduled || 0,
       icon: PhoneCall,
       color: "bg-zhb-success",
       description: "консультаций назначено"
     },
     {
       title: "Записанные на ИК",
-      value: stats.individual_consultation_scheduled,
+      value: stats.individual_consultation_scheduled || 0,
       icon: UserCheck,
       color: "bg-zhb-secondary",
       description: "индивидуальных консультаций"
     },
     {
       title: "Нет ответа",
-      value: stats.no_response,
+      value: stats.no_response || 0,
       icon: MessageSquare,
       color: "bg-zhb-warning",
       description: "не отвечают на диалог"
@@ -247,27 +247,27 @@ const Statistics = () => {
   const metricCards = [
     {
       title: "Среднее количество касаний",
-      value: stats.average_interactions_per_client,
+      value: stats.average_interactions_per_client || 0,
       icon: TrendingUp,
       suffix: "взаимодействий",
       description: "на одного клиента"
     },
     {
       title: "Средняя стоимость диалога",
-      value: `${stats.average_dialog_cost} BYN`,
+      value: `${stats.average_dialog_cost || 0} BYN`,
       icon: DollarSign,
       description: "за разговор с клиентом"
     },
     {
       title: "Количество токенов",
-      value: formatNumber(stats.total_tokens_used),
+      value: formatNumber(stats.total_tokens_used || 0),
       icon: Zap,
       suffix: "токенов",
       description: "потрачено за период"
     },
     {
       title: "Стоимость за период",
-      value: `${stats.total_period_cost} BYN`,
+      value: `${stats.total_period_cost || 0} BYN`,
       icon: CreditCard,
       description: "общие затраты на диалоги"
     }
