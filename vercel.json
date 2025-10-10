@@ -3,14 +3,14 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/build",
   "functions": {
-    "backend/server.py": {
+    "api/server.py": {
       "runtime": "python3.9@1.0.0"
     }
   },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.py"
+      "dest": "/api/server.py"
     },
     {
       "src": "/(.*)",
