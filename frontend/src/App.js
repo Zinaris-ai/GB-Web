@@ -385,7 +385,7 @@ const ChatHistory = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   useEffect(() => {
     fetchChats();
@@ -744,11 +744,9 @@ const ChatHistory = () => {
               <SelectTrigger className="w-20 h-8">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
+               <SelectContent>
+                 <SelectItem value="50">50</SelectItem>
+               </SelectContent>
             </Select>
             <span className="text-sm text-gray-700">из {total}</span>
           </div>
