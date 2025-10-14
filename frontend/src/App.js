@@ -386,30 +386,25 @@ const ChatHistory = () => {
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [allChats, setAllChats] = useState([]);
 
   useEffect(() => {
     fetchChats();
-  }, [search]);
-
-  useEffect(() => {
-    applyPagination();
-  }, [allChats, currentPage, itemsPerPage]);
+  }, [search, currentPage, itemsPerPage]);
 
   const fetchChats = async () => {
     try {
       setLoading(true);
       
-      // Prepare query parameters
+      // Prepare query parameters for server-side pagination
       const params = new URLSearchParams();
-      params.append('limit', '1000'); // Get all chats for client-side pagination
-      params.append('offset', '0');
+      params.append('limit', itemsPerPage.toString());
+      params.append('offset', ((currentPage - 1) * itemsPerPage).toString());
       
       if (search) {
         params.append('search', search);
       }
       
-      const response = await axios.get(`${API}/chats?${params.toString()}`);
+      const response = await axios.get(`${BACKEND_URL}/webhook/gb/statistics/chats?${params.toString()}`);
       
       // Проверяем что ответ - это JSON, а не HTML
       if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
@@ -430,9 +425,8 @@ const ChatHistory = () => {
         last_message_at: new Date(chat.last_message_at)
       }));
       
-      setAllChats(processedChats);
+      setChats(processedChats); // Set chats directly instead of allChats
       setTotal(totalCount);
-      setCurrentPage(1); // Reset to first page when search changes
     } catch (error) {
       console.error("Error fetching chats:", error);
       // Fallback to mock data if API fails
@@ -489,28 +483,26 @@ const ChatHistory = () => {
         }
       ];
       
-      // Filter by search if provided
-      const filteredChats = search 
+      // Filter by search if provided and apply mock pagination
+      let filteredChats = search 
         ? mockChats.filter(chat => 
             chat.client_name.toLowerCase().includes(search.toLowerCase()) ||
             chat.client_phone.includes(search)
           )
         : mockChats;
       
-      setAllChats(filteredChats);
+      // Apply mock pagination for fallback data
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedMockChats = filteredChats.slice(startIndex, endIndex);
+      
+      setChats(paginatedMockChats);
       setTotal(filteredChats.length);
-      setCurrentPage(1); // Reset to first page when search changes
     } finally {
       setLoading(false);
     }
   };
 
-  const applyPagination = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedChats = allChats.slice(startIndex, endIndex);
-    setChats(paginatedChats);
-  };
 
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(parseInt(value));
@@ -587,8 +579,8 @@ const ChatHistory = () => {
 
   const openChatDialog = async (chat) => {
     try {
-      // Fetch detailed chat data from API
-      const response = await axios.get(`${API}/chats/${chat.client_id}`);
+      // Fetch detailed chat data from API ${}s?$
+      const response = await axios.get(`${BACKEND_URL}/webhook/16c63be2-95fe-4e5c-879a-541de889a1c5/gb/statistics/chat/${chat.client_id}`);
       const chatDetails = response.data;
       
       // Проверяем что ответ - это JSON, а не HTML
@@ -756,7 +748,6 @@ const ChatHistory = () => {
                 <SelectItem value="10">10</SelectItem>
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
             <span className="text-sm text-gray-700">из {total}</span>
