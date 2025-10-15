@@ -76,7 +76,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
     if (start === end) return start;
     return `${start} — ${end}`;
   };
-
+  const [hoveredDate, setHoveredDate] = React.useState();
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -117,14 +117,34 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             </Button>
           </div>
           
+
           <Calendar
             mode="range"
             selected={tempRange}
+            defaultMonth={tempRange?.from}
             onSelect={setTempRange}
             numberOfMonths={window.innerWidth < 640 ? 1 : 2}
             locale={ru}
             className="rounded-md border"
+            onDayMouseEnter={(date) => setHoveredDate(date)}
+            onDayMouseLeave={() => setHoveredDate(undefined)}
+            modifiers={{
+              hoveredRange:
+                tempRange?.from &&
+                !tempRange?.to &&
+                hoveredDate &&
+                hoveredDate > tempRange.from
+                  ? {
+                      from: tempRange.from,
+                      to: hoveredDate,
+                    }
+                  : undefined,
+            }}
+            modifiersClassNames={{
+              hoveredRange: "bg-accent/50",
+            }}
           />
+
           
           <div className="flex justify-between pt-2">
             <Button 
@@ -579,7 +599,26 @@ const ChatHistory = () => {
 
   const openChatDialog = async (chat) => {
     try {
-      // Fetch detailed chat data from API ${}s?$
+      // Создаем базовый объект чата из переданного объекта chat
+      const baseChatDetails = {
+        id: chat.id,
+        client_id: chat.client_id,
+        client_name: chat.client_name,
+        client_phone: chat.client_phone,
+        status: chat.status,
+        started_at: chat.started_at,
+        last_message_at: chat.last_message_at,
+        total_interactions: chat.total_interactions
+      };
+
+      // Сначала показываем диалог с базовыми данными
+      setSelectedChat({
+        ...baseChatDetails,
+        messages: [] // Пока пустой массив сообщений
+      });
+      setDialogOpen(true);
+
+      // Затем загружаем сообщения отдельно
       const response = await axios.get(`${BACKEND_URL}/webhook/16c63be2-95fe-4e5c-879a-541de889a1c5/gb/statistics/chat/${chat.client_id}`);
       const chatDetails = response.data;
       
@@ -593,24 +632,28 @@ const ChatHistory = () => {
         throw new Error('Invalid response format: messages is not an array');
       }
       
-      // Convert date strings to Date objects
-      const processedChatDetails = {
-        ...chatDetails,
-        started_at: new Date(chatDetails.started_at),
-        last_message_at: new Date(chatDetails.last_message_at),
+      // Обновляем selectedChat с загруженными сообщениями
+      setSelectedChat({
+        ...baseChatDetails,
         messages: chatDetails.messages.map(msg => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
         }))
-      };
+      });
       
-      setSelectedChat(processedChatDetails);
-      setDialogOpen(true);
     } catch (error) {
       console.error("Error fetching chat details:", error);
-      // Fallback to mock data if API fails
+      
+      // Fallback to mock data if API fails - используем базовые данные из chat
       const mockChatDetails = {
-        ...chat,
+        id: chat.id,
+        client_id: chat.client_id,
+        client_name: chat.client_name,
+        client_phone: chat.client_phone,
+        status: chat.status,
+        started_at: chat.started_at,
+        last_message_at: chat.last_message_at,
+        total_interactions: chat.total_interactions,
         messages: [
           {
             id: "msg1",
