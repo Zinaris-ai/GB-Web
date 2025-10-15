@@ -87,20 +87,44 @@ code {
 
 /* === Фикс выравнивания календаря react-day-picker === */
 .rdp-head_cell {
-  @apply text-center font-normal text-[12px] text-muted-foreground;
-  width: 36px;
-  padding: 4px 0;
+  @apply text-center font-normal text-[12px] text-muted-foreground !important;
+  width: 36px !important;
+  padding: 4px 0 !important;
+  min-width: 36px !important;
 }
 
 .rdp-table {
-  width: 100%;
-  border-collapse: collapse;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
 }
 
 .rdp-day {
-  @apply flex items-center justify-center;
-  width: 36px;
-  height: 36px;
+  @apply flex items-center justify-center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+}
+
+/* Дополнительные правила для Popover контекста */
+[data-radix-popper-content-wrapper] .rdp-head_cell {
+  @apply text-center font-normal text-[12px] text-muted-foreground !important;
+  width: 36px !important;
+  padding: 4px 0 !important;
+  min-width: 36px !important;
+}
+
+[data-radix-popper-content-wrapper] .rdp-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+}
+
+[data-radix-popper-content-wrapper] .rdp-day {
+  @apply flex items-center justify-center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
 }
 
 /* === Плавное подсвечивание диапазона дат при наведении (hover-preview) === */
