@@ -143,12 +143,6 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             modifiersClassNames={{
               hoveredRange: "bg-accent/50",
             }}
-            classNames={{
-              head_cell: "text-center font-normal text-[12px] text-muted-foreground w-9 px-0",
-              table: "w-full border-collapse",
-              day: "flex items-center justify-center w-9 h-9 p-0 font-normal aria-selected:opacity-100",
-              cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md"
-            }}
           />
 
           
