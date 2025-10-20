@@ -12,6 +12,8 @@ import { Separator } from "./components/ui/separator";
 import { Calendar } from "./components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Toaster } from "./components/ui/toaster";
+import ToggleBot from "./components/ToggleBot";
 import { 
   BarChart3, 
   MessageSquare, 
@@ -931,7 +933,8 @@ const NavigationBar = ({ currentPath }) => {
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden sm:flex space-x-4">
+          <div className="hidden sm:flex items-center space-x-4">
+            <ToggleBot />
             <Link
               to="/"
               className={`px-4 py-2 rounded-lg transition-colors ${
@@ -973,6 +976,9 @@ const NavigationBar = ({ currentPath }) => {
         {mobileMenuOpen && (
           <div className="sm:hidden border-t border-gray-200 bg-white">
             <div className="px-2 pt-2 pb-3 space-y-1">
+              <div className="px-3 py-2">
+                <ToggleBot />
+              </div>
               <Link
                 to="/"
                 onClick={() => setMobileMenuOpen(false)}
@@ -1031,6 +1037,7 @@ function App() {
             <Route path="/chats" element={<ChatHistory />} />
           </Routes>
         </Layout>
+        <Toaster />
       </BrowserRouter>
     </div>
   );

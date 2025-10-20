@@ -1,0 +1,114 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useToast } from '../hooks/use-toast';
+
+const BACKEND_URL = 'https://n8n210980.hostkey.in';
+
+const ToggleBot = () => {
+  const [isActive, setIsActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const { toast } = useToast();
+
+  // Загружаем статус при монтировании компонента
+  useEffect(() => {
+    fetchBotStatus();
+  }, []);
+
+  const fetchBotStatus = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BACKEND_URL}/webhook/gb/togglebot/status`);
+      
+      if (response.data && typeof response.data.allActive === 'boolean') {
+        setIsActive(response.data.allActive);
+      } else {
+        console.error('Invalid response format:', response.data);
+        toast({
+          title: "Ошибка",
+          description: "Неверный формат ответа сервера",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching bot status:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить статус бота",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggle = async () => {
+    if (isToggling) return; // Предотвращаем множественные клики
+    
+    const newState = !isActive;
+    setIsToggling(true);
+
+    try {
+      const response = await axios.post(`${BACKEND_URL}/webhook/gb/togglebot/toggle`, {
+        active: newState
+      });
+
+      // Обновляем состояние только после успешного ответа
+      setIsActive(newState);
+      
+      toast({
+        title: "Успешно",
+        description: `Бот ${newState ? 'включен' : 'выключен'}`,
+      });
+    } catch (error) {
+      console.error('Error toggling bot:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось переключить состояние бота",
+        variant: "destructive",
+      });
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-10 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+        <span className="text-sm text-gray-500">Загрузка...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <button
+        onClick={handleToggle}
+        disabled={isToggling}
+        className={`
+          relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          ${isActive 
+            ? 'bg-green-500' 
+            : 'bg-gray-300'
+          }
+          ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        `}
+      >
+        <span
+          className={`
+            inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out
+            ${isActive ? 'translate-x-6' : 'translate-x-1'}
+            ${isToggling ? 'animate-pulse' : ''}
+          `}
+        />
+      </button>
+      <span className={`text-sm font-medium ${isActive ? 'text-green-600' : 'text-gray-500'}`}>
+        {isActive ? 'Активен' : 'Неактивен'}
+      </span>
+    </div>
+  );
+};
+
+export default ToggleBot;
