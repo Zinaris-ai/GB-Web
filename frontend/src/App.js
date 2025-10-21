@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -13,6 +13,8 @@ import { Calendar } from "./components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Toaster } from "./components/ui/toaster";
+import { toast } from "./hooks/use-toast";
+import { APP_VERSION, APP_CHANGE_SUMMARY } from "./config/appMeta";
 import ToggleBot from "./components/ToggleBot";
 import { 
   BarChart3, 
@@ -1022,12 +1024,19 @@ const NavigationBar = ({ currentPath }) => {
 // Layout wrapper to get current location
 const Layout = ({ children }) => {
   const location = useLocation();
+  const currentYear = new Date().getFullYear();
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <NavigationBar currentPath={location.pathname} />
-      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8 w-full">
         {children}
       </main>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 text-xs sm:text-sm text-gray-500 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+          <span className="font-medium text-gray-600">Версия приложения: {APP_VERSION}</span>
+          <span className="text-gray-400">© {currentYear} Жилищный баланс</span>
+        </div>
+      </footer>
     </div>
   );
 };
@@ -1035,6 +1044,35 @@ const Layout = ({ children }) => {
 // Main App Component
 function App() {
   // App initialization - no backend calls needed with mock data
+  const hasShownVersionToast = useRef(false);
+
+  useEffect(() => {
+    if (hasShownVersionToast.current) {
+      return;
+    }
+
+    const isBrowser = typeof window !== "undefined";
+
+    if (isBrowser) {
+      const storedVersion = window.localStorage.getItem("app_version");
+
+      if (storedVersion !== APP_VERSION) {
+        toast({
+          title: `Обновление ${APP_VERSION}`,
+          description: APP_CHANGE_SUMMARY,
+        });
+
+        window.localStorage.setItem("app_version", APP_VERSION);
+      }
+    } else {
+      toast({
+        title: `Обновление ${APP_VERSION}`,
+        description: APP_CHANGE_SUMMARY,
+      });
+    }
+
+    hasShownVersionToast.current = true;
+  }, []);
 
   return (
     <div className="App">
