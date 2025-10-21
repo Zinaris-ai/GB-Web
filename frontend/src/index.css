@@ -87,9 +87,10 @@ code {
 
 /* === Фикс выравнивания календаря react-day-picker v9.11+ === */
 .rdp-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+  width: 17.5rem !important; /* 7 колонок * 2.5rem */
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  margin: 0 auto !important;
 }
 
 .rdp-head_cell {
@@ -97,6 +98,10 @@ code {
   min-width: 2.5rem !important;
   max-width: 2.5rem !important;
   text-align: center !important;
+  padding: 0.5rem 0 !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 .rdp-cell {
@@ -104,6 +109,8 @@ code {
   min-width: 2.5rem !important;
   max-width: 2.5rem !important;
   text-align: center !important;
+  padding: 0 !important;
+  height: 2.5rem !important;
 }
 
 .rdp-day {
@@ -112,7 +119,9 @@ code {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.875rem !important;
 }
 
 /* === Плавное подсвечивание диапазона дат при наведении (hover-preview) === */
