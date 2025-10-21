@@ -85,22 +85,30 @@ code {
     }
 }
 
-/* === Фикс выравнивания календаря react-day-picker === */
-.rdp-head_cell {
-  @apply text-center font-normal text-[12px] text-muted-foreground;
-  width: 2.5rem;
-  padding: 4px 0;
-}
-
+/* === Фикс выравнивания календаря react-day-picker v9+ === */
 .rdp-table {
   width: 100%;
   border-collapse: collapse;
 }
 
+.rdp-head_cell {
+  width: 2.5rem !important;
+  min-width: 2.5rem !important;
+  max-width: 2.5rem !important;
+}
+
+.rdp-cell {
+  width: 2.5rem !important;
+  min-width: 2.5rem !important;
+  max-width: 2.5rem !important;
+}
+
 .rdp-day {
-  @apply flex items-center justify-center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* === Плавное подсвечивание диапазона дат при наведении (hover-preview) === */
@@ -113,4 +121,26 @@ code {
 .rdp-day[data-hovered-range] {
   background-color: hsl(var(--accent)) !important;
   color: hsl(var(--accent-foreground)) !important;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 640px) {
+  .rdp-head_cell,
+  .rdp-cell,
+  .rdp-day {
+    width: 2.25rem !important;
+    min-width: 2.25rem !important;
+    max-width: 2.25rem !important;
+  }
+  
+  .rdp-day {
+    height: 2.25rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Улучшенные переходы */
+.rdp-day:not([aria-selected]):hover {
+  background-color: hsl(var(--accent) / 0.5);
+  transition: background-color 0.15s ease;
 }
