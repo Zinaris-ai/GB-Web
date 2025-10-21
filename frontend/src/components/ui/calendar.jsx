@@ -37,19 +37,18 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full",
-        head_row: "flex",
-        head_cell: "flex-1 text-center text-xs font-medium text-muted-foreground py-2",
-        row: "flex w-full mt-2",
+        table: "w-full border-collapse border-spacing-0",
+        head_cell:
+          "text-center text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground",
         cell: cn(
-          "flex-1 h-10 flex items-center justify-center text-sm relative",
+          "p-0 relative focus-within:z-20",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md"
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-normal aria-selected:opacity-100"
+          "w-full h-10 p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",

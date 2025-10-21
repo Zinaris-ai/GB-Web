@@ -86,21 +86,37 @@ code {
 }
 
 /* === Фикс выравнивания календаря react-day-picker === */
-.rdp-head_cell {
-  @apply text-center font-normal text-[12px] text-muted-foreground;
-  width: 36px;
-  padding: 4px 0;
+.rdp {
+  --rdp-cell-size: 2.5rem;
+  --rdp-weekday-height: 2rem;
 }
 
-.rdp-table {
-  width: 100%;
-  border-collapse: collapse;
+.rdp-head_row,
+.rdp-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0;
+}
+
+.rdp-head_cell {
+  @apply text-center text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--rdp-weekday-height);
+}
+
+.rdp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .rdp-day {
   @apply flex items-center justify-center;
-  width: 36px;
-  height: 36px;
+  width: 100%;
+  height: var(--rdp-cell-size);
 }
 
 /* === Плавное подсвечивание диапазона дат при наведении (hover-preview) === */
