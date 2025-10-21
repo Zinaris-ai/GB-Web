@@ -19,14 +19,15 @@ function Calendar({
     <DayPicker
       locale={ru}
       formatters={{
-        formatWeekdayName: (date) => format(date, 'EEEEEE', { locale: ru })
+        formatWeekdayName: (date) => format(date, "EEEEEE", { locale: ru }),
       }}
       showOutsideDays={showOutsideDays}
       mode={mode}
       onSelect={onSelect}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        months:
+          "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
@@ -37,19 +38,18 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse table-fixed",
-        head_row: "",
-        head_cell: "text-center text-xs font-medium text-muted-foreground py-2",
-        row: "w-full mt-2",
+        table: "w-full border-collapse border-spacing-0",
+        head_cell:
+          "text-center text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground",
         cell: cn(
-          "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+          "p-0 relative focus-within:z-20",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md"
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-normal aria-selected:opacity-100"
+          "w-full h-10 p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
@@ -76,6 +76,7 @@ function Calendar({
     />
   );
 }
+
 Calendar.displayName = "Calendar";
 
 export { Calendar };
