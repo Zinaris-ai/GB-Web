@@ -33,20 +33,20 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse",
-        head_row: "",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex",
         head_cell:
-          "text-muted-foreground text-center rounded-md font-normal text-[0.8rem] w-12 min-w-[3rem] px-1",
-        row: "",
+          "text-muted-foreground flex-1 text-center rounded-md font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
         cell: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "flex-1 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md"
             : "[&:has([aria-selected])]:rounded-md"
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-12 p-0 font-normal aria-selected:opacity-100"
+          "h-9 w-full p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
