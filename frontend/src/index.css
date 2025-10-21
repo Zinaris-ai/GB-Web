@@ -88,7 +88,7 @@ code {
 /* === Фикс выравнивания календаря react-day-picker === */
 .rdp-head_cell {
   @apply text-center font-normal text-[12px] text-muted-foreground;
-  width: 36px;
+  width: 2.5rem;
   padding: 4px 0;
 }
 
@@ -99,8 +99,8 @@ code {
 
 .rdp-day {
   @apply flex items-center justify-center;
-  width: 36px;
-  height: 36px;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 /* === Плавное подсвечивание диапазона дат при наведении (hover-preview) === */
