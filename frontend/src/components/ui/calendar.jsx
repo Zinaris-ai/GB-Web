@@ -36,7 +36,7 @@ function Calendar({
         table: "w-full border-collapse",
         head_row: "",
         head_cell:
-          "text-muted-foreground text-center rounded-md font-normal text-[0.8rem] w-9",
+          "text-muted-foreground text-center rounded-md font-normal text-[0.8rem] w-12 min-w-[3rem] px-1",
         row: "",
         cell: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
@@ -46,7 +46,7 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          "h-9 w-12 p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",

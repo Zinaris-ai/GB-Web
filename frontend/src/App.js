@@ -43,14 +43,22 @@ const API = `${BACKEND_URL}/api`;
 const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
   const [tempRange, setTempRange] = useState(dateRange);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   // Обновляем tempRange когда dateRange изменяется
   useEffect(() => {
     setTempRange(dateRange);
   }, [dateRange]);
 
+  // Отслеживаем изменение размера окна
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleApply = () => {
-    if (tempRange?.from && tempRange?.to) {
+    if (tempRange?.from) {
       onDateRangeChange(tempRange);
       setIsOpen(false);
     }
@@ -125,7 +133,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             selected={tempRange}
             defaultMonth={tempRange?.from}
             onSelect={setTempRange}
-            numberOfMonths={window.innerWidth < 640 ? 1 : 2}
+            numberOfMonths={isMobile ? 1 : 2}
             locale={ru}
             className="rounded-md border"
             onDayMouseEnter={(date) => setHoveredDate(date)}
@@ -159,7 +167,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             <Button 
               size="sm"
               onClick={handleApply}
-              disabled={!tempRange?.from || !tempRange?.to}
+              disabled={!tempRange?.from}
               className="bg-zhb-primary hover:bg-zhb-primary/90"
             >
               Применить
