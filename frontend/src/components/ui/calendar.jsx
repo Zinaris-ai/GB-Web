@@ -37,9 +37,9 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse",
+        table: "w-full border-collapse table-fixed",
         head_row: "",
-        head_cell: "text-center text-xs font-medium text-muted-foreground py-2 w-10",
+        head_cell: "text-center text-xs font-medium text-muted-foreground py-2",
         row: "w-full mt-2",
         cell: cn(
           "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
