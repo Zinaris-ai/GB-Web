@@ -37,13 +37,13 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full table-fixed",
-        head_row: "",
+        table: "w-full",
+        head_row: "flex",
         head_cell:
-          "text-muted-foreground text-center rounded-md w-10 font-normal text-[0.8rem] px-1.5",
-        row: "w-full mt-2",
+          "flex-1 text-center text-xs font-medium text-muted-foreground py-2",
+        row: "flex w-full mt-2",
         cell: cn(
-          "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+          "flex-1 h-10 flex items-center justify-center text-sm relative focus-within:relative focus-within:z-20",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md"
