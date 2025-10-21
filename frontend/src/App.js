@@ -88,7 +88,7 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
     if (start === end) return start;
     return `${start} — ${end}`;
   };
-  const [hoveredDate, setHoveredDate] = React.useState();
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -129,35 +129,13 @@ const DateRangePicker = ({ dateRange, onDateRangeChange }) => {
             </Button>
           </div>
           
-
           <Calendar
-            mode="range"
-            selected={tempRange}
-            defaultMonth={tempRange?.from}
-            onSelect={setTempRange}
+            value={tempRange}
+            onChange={setTempRange}
             numberOfMonths={isMobile ? 1 : 2}
-            locale={ru}
-            className="rounded-md border"
-            onDayMouseEnter={(date) => setHoveredDate(date)}
-            onDayMouseLeave={() => setHoveredDate(undefined)}
-            modifiers={{
-              hoveredRange:
-                tempRange?.from &&
-                !tempRange?.to &&
-                hoveredDate &&
-                hoveredDate > tempRange.from
-                  ? {
-                      from: tempRange.from,
-                      to: hoveredDate,
-                    }
-                  : undefined,
-            }}
-            modifiersClassNames={{
-              hoveredRange: "bg-accent/50",
-            }}
+            className="rounded-md"
           />
 
-          
           <div className="flex justify-between pt-2">
             <Button 
               variant="outline" 
