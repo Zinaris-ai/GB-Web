@@ -8,8 +8,6 @@ const ToggleBot = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
-  // FUTURE: Раскомментировать после тестирования n8n workflows
-  // const [isAutoMode, setIsAutoMode] = useState(false);
   const { toast } = useToast();
 
   // Загружаем статус при монтировании компонента
@@ -32,19 +30,6 @@ const ToggleBot = () => {
           variant: "destructive",
         });
       }
-
-      // FUTURE: Раскомментировать для показа авто-режима
-      // Получаем статус автоматического режима
-      // try {
-      //   const scheduleResponse = await axios.get(`${BACKEND_URL}/webhook/gb/schedule`);
-      //   if (scheduleResponse.data && typeof scheduleResponse.data.scheduleEnabled === 'boolean') {
-      //     setIsAutoMode(scheduleResponse.data.scheduleEnabled);
-      //   }
-      // } catch (scheduleError) {
-      //   // Если расписание недоступно - продолжаем работать без индикатора
-      //   console.log('Schedule API not available yet:', scheduleError);
-      //   setIsAutoMode(false);
-      // }
     } catch (error) {
       console.error('Error fetching bot status:', error);
       toast({
@@ -121,11 +106,10 @@ const ToggleBot = () => {
       </button>
       <span className={`text-sm font-medium ${isActive ? 'text-green-600' : 'text-gray-500'}`}>
         {isActive ? 'Активен' : 'Неактивен'}
-        {/* FUTURE: Раскомментировать для показа режима */}
-        {/* {isAutoMode ? ' 🤖' : ' ✋'} */}
       </span>
     </div>
   );
 };
 
 export default ToggleBot;
+

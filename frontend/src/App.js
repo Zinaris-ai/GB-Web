@@ -16,6 +16,7 @@ import { Toaster } from "./components/ui/toaster";
 import { toast } from "./hooks/use-toast";
 import { APP_VERSION, APP_CHANGE_SUMMARY } from "./config/appMeta";
 import ToggleBot from "./components/ToggleBot";
+import BotSchedule from "./components/BotSchedule";
 import { 
   BarChart3, 
   MessageSquare, 
@@ -32,7 +33,8 @@ import {
   Zap,
   CreditCard,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CalendarClock
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -945,6 +947,17 @@ const NavigationBar = ({ currentPath }) => {
               <MessageSquare className="w-4 h-4 inline-block mr-2" />
               История переписок
             </Link>
+            <Link
+              to="/schedule"
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                currentPath === '/schedule' 
+                  ? 'bg-zhb-primary text-white' 
+                  : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+              }`}
+            >
+              <CalendarClock className="w-4 h-4 inline-block mr-2" />
+              Расписание
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -990,6 +1003,18 @@ const NavigationBar = ({ currentPath }) => {
               >
                 <MessageSquare className="w-4 h-4 inline-block mr-2" />
                 История переписок
+              </Link>
+              <Link
+                to="/schedule"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  currentPath === '/schedule' 
+                    ? 'bg-zhb-primary text-white' 
+                    : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+                }`}
+              >
+                <CalendarClock className="w-4 h-4 inline-block mr-2" />
+                Расписание
               </Link>
             </div>
           </div>
@@ -1059,6 +1084,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Statistics />} />
             <Route path="/chats" element={<ChatHistory />} />
+            <Route path="/schedule" element={<BotSchedule />} />
           </Routes>
         </Layout>
         <Toaster />
