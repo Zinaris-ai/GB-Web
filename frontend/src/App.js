@@ -17,6 +17,7 @@ import { toast } from "./hooks/use-toast";
 import { APP_VERSION, APP_CHANGE_SUMMARY } from "./config/appMeta";
 import ToggleBot from "./components/ToggleBot";
 import BotSchedule from "./components/BotSchedule";
+import MailingList from "./components/MailingList";
 import { 
   BarChart3, 
   MessageSquare, 
@@ -34,7 +35,8 @@ import {
   CreditCard,
   ChevronLeft,
   ChevronRight,
-  CalendarClock
+  CalendarClock,
+  Mail
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -958,6 +960,17 @@ const NavigationBar = ({ currentPath }) => {
               <CalendarClock className="w-4 h-4 inline-block mr-2" />
               Расписание
             </Link>
+            <Link
+              to="/mailing"
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                currentPath === '/mailing' 
+                  ? 'bg-zhb-primary text-white' 
+                  : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+              }`}
+            >
+              <Mail className="w-4 h-4 inline-block mr-2" />
+              Рассылка
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -1015,6 +1028,18 @@ const NavigationBar = ({ currentPath }) => {
               >
                 <CalendarClock className="w-4 h-4 inline-block mr-2" />
                 Расписание
+              </Link>
+              <Link
+                to="/mailing"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  currentPath === '/mailing' 
+                    ? 'bg-zhb-primary text-white' 
+                    : 'text-gray-600 hover:text-zhb-primary hover:bg-gray-50'
+                }`}
+              >
+                <Mail className="w-4 h-4 inline-block mr-2" />
+                Рассылка
               </Link>
             </div>
           </div>
@@ -1085,6 +1110,7 @@ function App() {
             <Route path="/" element={<Statistics />} />
             <Route path="/chats" element={<ChatHistory />} />
             <Route path="/schedule" element={<BotSchedule />} />
+            <Route path="/mailing" element={<MailingList />} />
           </Routes>
         </Layout>
         <Toaster />

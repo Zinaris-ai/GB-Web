@@ -32,7 +32,13 @@ const BotSchedule = () => {
   const fetchSchedule = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BACKEND_URL}/webhook/gb/schedule`);
+      console.log('Fetching schedule from:', `${BACKEND_URL}/webhook/gb/schedule`);
+      
+      const response = await axios.get(`${BACKEND_URL}/webhook/gb/schedule`, {
+        timeout: 10000 // 10 секунд таймаут
+      });
+      
+      console.log('Schedule response:', response.data);
       
       const data = response.data;
       setScheduleEnabled(data.scheduleEnabled || false);
@@ -48,15 +54,18 @@ const BotSchedule = () => {
       }), {});
       
       setSchedule(data.schedule || defaultSchedule);
+      
+      // Показываем успешное уведомление только если данные загружены с сервера
+      if (data.schedule) {
+        toast({
+          title: "Успешно",
+          description: "Расписание загружено с сервера",
+        });
+      }
     } catch (error) {
       console.error('Error fetching schedule:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить расписание. Используются значения по умолчанию.",
-        variant: "destructive",
-      });
       
-      // Fallback: установим расписание по умолчанию
+      // Fallback: установим расписание по умолчанию без показа ошибки
       const defaultSchedule = DAYS.reduce((acc, day) => ({
         ...acc,
         [day.value]: {
@@ -67,6 +76,12 @@ const BotSchedule = () => {
       }), {});
       setSchedule(defaultSchedule);
       setScheduleEnabled(false);
+      
+      // Показываем только информационное сообщение
+      toast({
+        title: "Информация",
+        description: "Используются настройки расписания по умолчанию",
+      });
     } finally {
       setLoading(false);
     }
@@ -85,10 +100,16 @@ const BotSchedule = () => {
   const saveSchedule = async () => {
     try {
       setSaving(true);
-      await axios.post(`${BACKEND_URL}/webhook/gb/schedule`, {
+      console.log('Saving schedule to:', `${BACKEND_URL}/webhook/gb/schedule`);
+      
+      const response = await axios.post(`${BACKEND_URL}/webhook/gb/schedule`, {
         scheduleEnabled: scheduleEnabled,
         schedule: schedule
+      }, {
+        timeout: 10000 // 10 секунд таймаут
       });
+      
+      console.log('Save schedule response:', response.data);
       
       toast({
         title: "Успешно",
@@ -96,9 +117,23 @@ const BotSchedule = () => {
       });
     } catch (error) {
       console.error('Error saving schedule:', error);
+      
+      // Более детальная диагностика ошибки сохранения
+      let errorMessage = "Не удалось сохранить расписание";
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = "Таймаут соединения при сохранении";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Webhook для сохранения расписания не найден";
+      } else if (error.response?.status >= 500) {
+        errorMessage = "Ошибка сервера при сохранении";
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = "Проблема с сетью при сохранении";
+      }
+      
       toast({
         title: "Ошибка",
-        description: "Не удалось сохранить расписание",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
