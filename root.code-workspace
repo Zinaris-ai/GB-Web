@@ -1,0 +1,8 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://ssh-remote+7b22686f73744e616d65223a22686f6d6562616c227d/root"
+		}
+	],
+	"remoteAuthority": "ssh-remote+7b22686f73744e616d65223a22686f6d6562616c227d"
+}

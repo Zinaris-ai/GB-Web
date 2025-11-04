@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+Statistics, GB Token Calc, GB bot, Deal reactivation, GB Reactivation Loop, GB Initialization, GB Initialization Loop, Bitrix File Describer, GB Bitrix History, GB Error log
+
+Это воркфлоу в n8n которые задействованы в этом проекте, а также иногда и другие.

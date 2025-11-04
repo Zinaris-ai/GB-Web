@@ -1,0 +1,53 @@
+{
+  "id": "jnpkIndV7GJpwc6s",
+  "name": "GB Bot Schedule Manager",
+  "active": false,
+  "created": "2025-10-22T17:29:45.757Z",
+  "updated": "2025-10-22T17:29:45.757Z",
+  "workflow": {
+    "nodes": [
+      {
+        "id": "webhook-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300],
+        "parameters": {
+          "httpMethod": "GET,POST",
+          "path": "gb/schedule",
+          "responseMode": "lastNode"
+        }
+      },
+      {
+        "id": "switch-1",
+        "name": "Switch by Method",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 1,
+        "position": [460, 300],
+        "parameters": {
+          "rules": {
+            "rules": [
+              {
+                "value1": "={{$json.method}}",
+                "operation": "equal",
+                "value2": "GET"
+              },
+              {
+                "value1": "={{$json.method}}",
+                "operation": "equal",
+                "value2": "POST"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [[{"node": "Switch by Method", "type": "main", "index": 0}]]
+      }
+    }
+  },
+  "note": "BACKUP: Original version with incorrect 'method' field before fix"
+}
+
