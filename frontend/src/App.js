@@ -784,8 +784,8 @@ const ChatHistory = () => {
       </div>
 
       {/* Sorting Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-        <span className="text-sm text-gray-600">Сортировать по:</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <span className="text-sm font-medium text-gray-700">Сортировать по:</span>
         <div className="flex flex-wrap gap-2">
           {sortOptions.map((option) => {
             const isActive = sortConfig.field === option.field;
@@ -798,7 +798,7 @@ const ChatHistory = () => {
                 type="button"
                 size="sm"
                 variant={isActive ? "default" : "outline"}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1.5 text-sm"
                 onClick={() => toggleSort(option.field)}
               >
                 {option.label}
