@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -35,8 +35,13 @@ import {
   CreditCard,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   CalendarClock,
-  Mail
+  Mail,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -400,10 +405,68 @@ const ChatHistory = () => {
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [sortConfig, setSortConfig] = useState({ field: null, direction: "desc" });
+  const messagesEndRef = useRef(null);
+  const sortOptions = [
+    { field: "started_at", label: "Начат" },
+    { field: "last_message_at", label: "Последнее сообщение" },
+    { field: "total_interactions", label: "Взаимодействий" }
+  ];
 
   useEffect(() => {
     fetchChats();
   }, [search, currentPage, itemsPerPage]);
+
+  // Автопрокрутка к последнему сообщению при открытии чата
+  useEffect(() => {
+    if (dialogOpen && selectedChat?.messages?.length > 0) {
+      // Небольшая задержка чтобы DOM успел обновиться
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 50);
+    }
+  }, [dialogOpen, selectedChat?.messages?.length]);
+
+  const normalizeMessages = (messages = []) => {
+    return messages
+      .map((msg) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp); // Старые вверху, новые внизу (как в Telegram)
+  };
+
+  const toggleSort = (field) => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        // Если клик по тому же полю
+        if (prev.direction === "desc") {
+          // Второй клик - переключаем на asc
+          return { field, direction: "asc" };
+        } else {
+          // Третий клик - сбрасываем сортировку
+          return { field: null, direction: "desc" };
+        }
+      }
+      // Первый клик по новому полю - устанавливаем desc
+      return { field, direction: "desc" };
+    });
+  };
+
+  const sortedChats = useMemo(() => {
+    if (!sortConfig.field) return [...chats];
+
+    const { field, direction } = sortConfig;
+    const multiplier = direction === "desc" ? -1 : 1;
+
+    return [...chats].sort((a, b) => {
+      const aValue = a[field] instanceof Date ? a[field].getTime() : (a[field] ?? 0);
+      const bValue = b[field] instanceof Date ? b[field].getTime() : (b[field] ?? 0);
+
+      if (aValue === bValue) return 0;
+      return aValue > bValue ? multiplier : -multiplier;
+    });
+  }, [chats, sortConfig]);
 
   const fetchChats = async () => {
     try {
@@ -519,7 +582,11 @@ const ChatHistory = () => {
 
 
   const handleItemsPerPageChange = (value) => {
-    setItemsPerPage(parseInt(value));
+    if (value === 'all') {
+      setItemsPerPage(total || 1000000);
+    } else {
+      setItemsPerPage(parseInt(value));
+    }
     setCurrentPage(1);
   };
 
@@ -528,6 +595,7 @@ const ChatHistory = () => {
   };
 
   const getTotalPages = () => {
+    if (itemsPerPage >= total) return 1;
     return Math.ceil(total / itemsPerPage);
   };
 
@@ -629,10 +697,7 @@ const ChatHistory = () => {
       // Обновляем selectedChat с загруженными сообщениями
       setSelectedChat({
         ...baseChatDetails,
-        messages: chatDetails.messages.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }))
+        messages: normalizeMessages(chatDetails.messages)
       });
       
     } catch (error) {
@@ -682,7 +747,10 @@ const ChatHistory = () => {
         ]
       };
       
-      setSelectedChat(mockChatDetails);
+      setSelectedChat({
+        ...mockChatDetails,
+        messages: normalizeMessages(mockChatDetails.messages)
+      });
       setDialogOpen(true);
     }
   };
@@ -715,9 +783,35 @@ const ChatHistory = () => {
         />
       </div>
 
+      {/* Sorting Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+        <span className="text-sm text-gray-600">Сортировать по:</span>
+        <div className="flex flex-wrap gap-2">
+          {sortOptions.map((option) => {
+            const isActive = sortConfig.field === option.field;
+            const SortIcon = isActive 
+              ? (sortConfig.direction === "desc" ? ArrowDown : ArrowUp)
+              : ArrowUpDown;
+            return (
+              <Button
+                key={option.field}
+                type="button"
+                size="sm"
+                variant={isActive ? "default" : "outline"}
+                className="flex items-center gap-1"
+                onClick={() => toggleSort(option.field)}
+              >
+                {option.label}
+                <SortIcon className={`h-4 w-4 ${isActive ? "" : "text-gray-400"}`} />
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Chats List */}
       <div className="grid gap-3 sm:gap-4">
-        {chats.map((chat) => (
+        {sortedChats.map((chat) => (
           <Card 
             key={chat.id} 
             className="hover:shadow-md transition-shadow cursor-pointer border-0 shadow-sm"
@@ -777,13 +871,20 @@ const ChatHistory = () => {
           {/* Items per page selector */}
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-700">Показать:</span>
-            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-              <SelectTrigger className="w-20 h-8">
+            <Select 
+              value={itemsPerPage >= total ? 'all' : itemsPerPage.toString()} 
+              onValueChange={handleItemsPerPageChange}
+            >
+              <SelectTrigger className="w-24 h-8">
                 <SelectValue />
               </SelectTrigger>
-               <SelectContent>
-                 <SelectItem value="50">50</SelectItem>
-               </SelectContent>
+              <SelectContent>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value="all">Все</SelectItem>
+              </SelectContent>
             </Select>
             <span className="text-sm text-gray-700">из {total}</span>
           </div>
@@ -794,6 +895,18 @@ const ChatHistory = () => {
               Страница {currentPage} из {getTotalPages()}
             </span>
             
+            {/* First page button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className="h-8 px-2"
+              title="Первая страница"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+
             {/* Previous button */}
             <Button
               variant="outline"
@@ -801,6 +914,7 @@ const ChatHistory = () => {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="h-8 w-8 p-0"
+              title="Предыдущая страница"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -827,8 +941,21 @@ const ChatHistory = () => {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === getTotalPages()}
               className="h-8 w-8 p-0"
+              title="Следующая страница"
             >
               <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            {/* Last page button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(getTotalPages())}
+              disabled={currentPage === getTotalPages()}
+              className="h-8 px-2"
+              title="Последняя страница"
+            >
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -893,6 +1020,7 @@ const ChatHistory = () => {
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
                 </div>
               </div>
