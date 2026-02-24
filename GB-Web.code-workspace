@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "D:\\OryntixGit\\GB-Web"
+    },
+    {
+      "path": "ssh://root@homebal/root"
+    }
+  ],
+  "settings": {
+    "remote.SSH.remotePlatform": {
+      "homebal": "linux"
+    },
+    "powershell.cwd": "root"
+  }
+}
